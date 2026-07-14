@@ -35,4 +35,5 @@ Not yet implemented. Per the original plan: Proxmox's native snapshots/backups f
 ## Open items
 
 - 2TB backup drive needs to be physically reconnected/verified before it can serve as a backup target.
-- Mirror the `tank` pool once a second matching (or larger) drive is available.
+- **To buy:** a second 4TB+ NAS HDD to mirror the `tank` pool — no redundancy exists until this is added.
+- **To buy:** 2.5GbE switch — 1GbE currently caps transfers at ~113MB/s, which matters most while migrating the Plex media library onto `tank/media`. See [Network.md](Network.md).

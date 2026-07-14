@@ -44,6 +44,13 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 
 ---
 
+# Hardware Wishlist
+
+- [ ] Second 4TB+ NAS HDD — mirror the `tank` ZFS pool on truenas01 (currently unmirrored, no redundancy)
+- [ ] 2.5GbE switch (+ NICs where needed) — current 1GbE caps transfers around ~113MB/s; matters most for moving the Plex media library onto truenas01
+
+---
+
 # Hypervisor
 
 - Proxmox VE 9.x
