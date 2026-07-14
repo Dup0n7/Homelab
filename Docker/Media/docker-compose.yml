@@ -14,5 +14,15 @@ services:
     ports:
       - "32400:32400"
 
+  portainer_agent:
+    image: portainer/agent:latest
+    container_name: portainer_agent
+    restart: unless-stopped
+    ports:
+      - "9001:9001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+
 volumes:
   plex_config:
