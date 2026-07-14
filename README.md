@@ -19,6 +19,9 @@ The lab is designed to mirror production environments as closely as possible whi
 - Practice Windows Server & Active Directory
 - Learn GitHub Actions CI/CD
 - Experiment with local AI using an RTX 4000 GPU
+- Learn the Model Context Protocol (MCP) and build a custom MCP server exposing this homelab's infrastructure to AI agents
+- Build custom AI agents (e.g. via the Claude Agent SDK) that can operate against homelab services
+- Integrate AI (Claude, local LLMs via Ollama) into n8n automation workflows
 - Document all infrastructure as code
 
 ---
@@ -51,10 +54,11 @@ The lab is designed to mirror production environments as closely as possible whi
 
 | VM | Purpose | Status |
 |----|----------|--------|
-| automation01 | Docker / Terraform / Ansible | 🚧 |
-| dc01 | Windows Server | Planned |
+| automation01 | Docker — n8n, Portainer, Uptime Kuma | ✅ Running |
+| truenas01 | TrueNAS SCALE — ZFS storage (NFS/SMB) | ✅ Running |
+| plex01 | Docker — Plex, Portainer Agent | ✅ Running |
+| dc01 | Windows Server (AD/DNS/GPO) | Planned |
 | win11-test01 | Test workstation | Planned |
-| truenas01 | NAS | Planned |
 | k3s-master01 | Kubernetes | Planned |
 | k3s-worker01 | Kubernetes | Planned |
 
@@ -62,15 +66,19 @@ The lab is designed to mirror production environments as closely as possible whi
 
 # Docker Services
 
-Planned
+## Running
 
-- Portainer
+- n8n (automation01)
+- Portainer + Agent (automation01, plex01)
+- Uptime Kuma (automation01)
+- Plex (plex01)
+
+## Planned
+
 - Grafana
 - Prometheus
 - Loki
 - Alloy
-- Uptime Kuma
-- n8n
 - PostgreSQL
 - Redis
 - Nextcloud
@@ -85,14 +93,16 @@ Planned
 
 ## Current
 
-- 4 TB Primary Storage
-- 2 TB Backup Storage
+- `tank` pool (truenas01) — single 4TB drive, no redundancy yet
+- `tank/media` dataset — exported via NFS (plex01) and SMB (Windows access)
+- 2 TB backup drive — not currently detected/connected, needs follow-up
 
 ## Future
 
-- ZFS Mirror
+- ZFS Mirror (once a second matching/larger drive is added)
 - Snapshots
 - Automated Backups
+- Lock down NFS export to plex01's IP specifically
 
 ---
 
@@ -121,14 +131,15 @@ Planned
 
 # Networking
 
-Static IPs
+Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 
 | Device | Address |
 |---------|---------|
 | Proxmox | TBD |
-| automation01 | TBD |
-| dc01 | TBD |
-| TrueNAS | TBD |
+| automation01 | 192.168.1.20 |
+| truenas01 | 192.168.1.40 |
+| plex01 | 192.168.1.50 |
+| dc01 | Reserved: 192.168.1.30 |
 
 ---
 
@@ -138,21 +149,32 @@ Static IPs
 
 - [x] Install Proxmox
 - [x] Configure Static IP
+- [x] Ubuntu cloud-init template + automation01 VM
+- [x] Docker / Docker Compose
+- [x] n8n
+- [x] Portainer (+ multi-host via Agent)
+- [x] Uptime Kuma
+- [x] TrueNAS SCALE (single-disk pool, NFS + SMB shares)
+- [x] Plex (plex01, NFS-backed media)
 
 ## In Progress
 
-- [ ] Ubuntu Automation VM
-- [ ] Docker
-- [ ] Docker Compose
+- [ ] Migrating existing media library onto TrueNAS
+- [ ] Reconnecting/verifying the 2TB backup drive
 
 ## Planned
 
-- [ ] Grafana
+- [ ] Grafana / Prometheus / Loki monitoring stack
 - [ ] Terraform
 - [ ] Ansible
 - [ ] Kubernetes
-- [ ] TrueNAS
-- [ ] AI Stack
+- [ ] Windows Server (dc01) / AD
+- [ ] ZFS mirror for tank pool
+- [ ] AI Stack (Ollama / Open WebUI via RTX 4000)
+- [ ] n8n workflows calling AI (Claude / local LLMs)
+- [ ] MCP fundamentals (run existing community MCP servers)
+- [ ] Custom MCP server exposing homelab infrastructure (Proxmox/TrueNAS/Uptime Kuma status)
+- [ ] Custom AI agents (e.g. via the Claude Agent SDK) operating against homelab services
 
 ---
 
@@ -204,6 +226,10 @@ homelab/
 - GitHub Actions
 - Python
 - Bash
+- Claude / Claude Agent SDK
+- Model Context Protocol (MCP)
+- Ollama
+- Open WebUI
 
 ---
 
