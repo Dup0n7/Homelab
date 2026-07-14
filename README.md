@@ -6,6 +6,8 @@ This repository documents my self-hosted infrastructure for building, testing, a
 
 The lab is designed to mirror production environments as closely as possible while remaining cost effective for home use.
 
+See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, and [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way.
+
 ---
 
 # Goals
