@@ -1,0 +1,8 @@
+- greeting:
+    text_size: xl
+    text: "Welcome to the Homelab"
+
+- resources:
+    cpu: true
+    memory: true
+    disk: /

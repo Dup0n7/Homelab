@@ -1,0 +1,29 @@
+- Infrastructure:
+    - Proxmox:
+        href: https://192.168.1.209:8006
+        description: Hypervisor
+        icon: proxmox.png
+    - TrueNAS:
+        href: http://192.168.1.40
+        description: ZFS storage (NFS/SMB)
+        icon: truenas.png
+
+- Automation:
+    - n8n:
+        href: http://192.168.1.20:5678
+        description: Workflow automation
+        icon: n8n.png
+    - Portainer:
+        href: https://192.168.1.20:9443
+        description: Docker management
+        icon: portainer.png
+    - Uptime Kuma:
+        href: http://192.168.1.20:3001
+        description: Uptime monitoring
+        icon: uptime-kuma.png
+
+- Media:
+    - Plex:
+        href: http://192.168.1.50:32400/web
+        description: Media server
+        icon: plex.png

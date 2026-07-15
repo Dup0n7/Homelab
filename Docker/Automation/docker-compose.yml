@@ -35,6 +35,17 @@ services:
     volumes:
       - uptime_kuma_data:/app/data
 
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    environment:
+      - TZ=America/New_York
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./homepage-config:/app/config
+
 volumes:
   n8n_data:
   portainer_data:
