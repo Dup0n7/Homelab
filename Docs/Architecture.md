@@ -31,6 +31,21 @@ Proxmox VE 9.2.2 (bare metal, 512GB boot SSD, 32GB RAM)
 - **Docker host per functional group, not per app** — services are grouped onto VMs by role (`automation01` = automation/ops tooling, `plex01` = media), not one VM per container. Matches the "group by function" approach from the original plan rather than either extreme (single VM for everything, or a VM per service).
 - **Multi-host container visibility via Portainer Agent** — Portainer on `automation01` manages `plex01` as a second registered "environment" via the Portainer Agent, rather than running a separate Portainer per VM.
 
+## Boot / resilience behavior
+
+What happens if Proxmox is rebooted or fully power-cycled:
+
+| Layer | Mechanism |
+|---|---|
+| Physical power-on | BIOS "Restore on AC Power Loss" — must be verified in firmware, outside Proxmox's control |
+| VM autostart | `onboot=1` set on all three VMs (`101`, `200`, `102`) |
+| Boot order | `truenas01` (order=1, 60s delay) → `automation01` (order=2) → `plex01` (order=3), so TrueNAS's NFS export is ready before `plex01` tries to mount it |
+| plex01's NFS mount | `/etc/fstab` uses `_netdev,nofail` — waits for networking before mounting, and won't hang/fail the boot if TrueNAS isn't up in time |
+| Docker containers | Every service across both Docker hosts uses `restart: unless-stopped`; Docker daemon itself starts on boot by default, so containers recover automatically once their VM is up |
+| TrueNAS NFS/SMB services | Configured with "Start on Boot" enabled in TrueNAS Services |
+
+Net effect: a full power cycle should bring the whole lab back up unattended, in the correct dependency order, assuming the BIOS setting above is actually enabled (not independently verified from software).
+
 ## Deviations from the original plan
 
 - **TrueNAS was built earlier than planned.** The original roadmap deferred TrueNAS until a second matching drive was purchased (to avoid a redundancy-less pool). It was built now, on the single 4TB drive as an unmirrored stripe, to unblock the Plex media consolidation — this is a deliberate, accepted risk to revisit once a second drive is available.
