@@ -33,4 +33,4 @@ Not yet configured. Original plan calls for Tailscale rather than exposing any s
 ## Open items
 
 - **Proxmox's IP (`192.168.1.209`) falls inside the router's DHCP range (`.64`-`.253`)**, unlike every other static host in this lab (all assigned in the `.2`-`.63` range specifically to avoid this). The router could theoretically hand `.209` to another device via DHCP, conflicting with Proxmox. Fix by either adding a DHCP reservation/exclusion for `.209` on the router, or re-IPing Proxmox into the safe static range — reservation is less disruptive.
-- **To buy:** 2.5GbE switch (+ NICs where needed) to replace the current 1GbE bottleneck (~113MB/s ceiling), most relevant for the Plex media migration onto `truenas01`. See [Storage.md](Storage.md).
+- **2.5GbE switch acquired (2026-07-15), not yet installed/configured.** Once it's in place, revisit NIC speeds on Proxmox/automation01/truenas01/plex01 — the switch alone doesn't help until the connected devices also negotiate 2.5GbE (check `ethtool <iface>` on each host afterward). Currently still on 1GbE (~113MB/s ceiling).

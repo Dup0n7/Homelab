@@ -1,9 +1,13 @@
 # Architecture
 
-## Current state (2026-07-14)
+## Current state (2026-07-15)
 
 ```
-Proxmox VE 9.2.2 (bare metal, 512GB boot SSD, 32GB RAM)
+Proxmox VE 9.2.2 (bare metal, 192.168.1.209, 32GB RAM)
+│
+├── Local storage
+│   ├── local-lvm   — boot SSD (512GB) — Proxmox OS + original VM disks
+│   └── ssd2-thin   — second SSD (512GB, M.2 SATA) — extra VM disk storage
 │
 ├── automation01 (VMID 101) — 192.168.1.20 — 4 vCPU / 8GB RAM / 80GB disk
 │   └── Docker Compose (Docker/Automation/)
@@ -11,9 +15,9 @@ Proxmox VE 9.2.2 (bare metal, 512GB boot SSD, 32GB RAM)
 │       ├── portainer       :9443 (management UI, Docker Agent-connected to plex01)
 │       └── uptime-kuma     :3001
 │
-├── truenas01 (VMID 200) — 192.168.1.40 — 4 vCPU / 8GB RAM / 32GB boot + 4TB passthrough
+├── truenas01 (VMID 200) — 192.168.1.40 — 4 vCPU / 8GB RAM / 32GB boot + 2x 4TB passthrough
 │   └── TrueNAS SCALE Community Edition 25.10.4
-│       └── pool "tank" (single-disk, no redundancy)
+│       └── pool "tank" — MIRROR (WD Red 4TB + HGST Ultrastar 4TB), resilvered 2026-07-15
 │           └── dataset "media" — exported via NFS + SMB
 │
 ├── plex01 (VMID 102) — 192.168.1.50 — 2 vCPU / 4GB RAM / 40GB disk
@@ -48,9 +52,10 @@ Net effect: a full power cycle should bring the whole lab back up unattended, in
 
 ## Deviations from the original plan
 
-- **TrueNAS was built earlier than planned.** The original roadmap deferred TrueNAS until a second matching drive was purchased (to avoid a redundancy-less pool). It was built now, on the single 4TB drive as an unmirrored stripe, to unblock the Plex media consolidation — this is a deliberate, accepted risk to revisit once a second drive is available.
+- **TrueNAS was built earlier than planned, on an unmirrored single disk.** The original roadmap deferred TrueNAS until a second matching drive was purchased. It was built anyway to unblock the Plex media consolidation, running unmirrored for about a day as an accepted risk — **resolved 2026-07-15** when a second 4TB drive (HGST Ultrastar) was added and the pool extended into a proper mirror.
 - **plex01 was not part of the original roadmap at all.** It was added to consolidate an existing, separate Plex server the user already ran, using TrueNAS storage as the shared backing store.
 - **The 2TB backup drive from the original hardware inventory is currently not detected on the host** — needs investigation before it can serve its planned role as a backup target.
+- **A second SSD was added and built into `ssd2-thin`**, a second LVM-Thin pool for VM disk storage — wasn't in the original plan, added opportunistically once the hardware was available. Same model as the boot SSD (M.2 SATA, not NVMe), so it relieves I/O contention across VMs rather than providing a raw speed increase.
 
 ## Not yet built (from the original roadmap)
 

@@ -39,15 +39,17 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 | RAM | 32 GB DDR4 |
 | GPU | NVIDIA RTX 4000 |
 | Boot Drive | 512 GB SSD |
-| Storage | 4 TB NAS HDD |
+| Second SSD | 512 GB SSD (M.2 SATA) — `ssd2-thin` LVM-Thin pool |
+| Storage | 2x 4 TB NAS HDD (WD Red + HGST Ultrastar) — mirrored ZFS pool on truenas01 |
 | Backup | 2 TB NAS HDD |
 
 ---
 
 # Hardware Wishlist
 
-- [ ] Second 4TB+ NAS HDD — mirror the `tank` ZFS pool on truenas01 (currently unmirrored, no redundancy)
-- [ ] 2.5GbE switch (+ NICs where needed) — current 1GbE caps transfers around ~113MB/s; matters most for moving the Plex media library onto truenas01
+- [x] Second 4TB+ NAS HDD — `tank` ZFS pool on truenas01 is now a mirror (resilvered 2026-07-15, 0 errors)
+- [x] 2.5GbE switch — acquired, not yet installed/configured
+- [ ] Install/configure the 2.5GbE switch and confirm NICs negotiate 2.5GbE on Proxmox/automation01/truenas01/plex01
 
 ---
 
@@ -102,13 +104,13 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 
 ## Current
 
-- `tank` pool (truenas01) — single 4TB drive, no redundancy yet
+- `tank` pool (truenas01) — **mirrored** (WD Red 4TB + HGST Ultrastar 4TB), resilvered cleanly 2026-07-15
+- `ssd2-thin` pool (Proxmox, second SSD) — extra VM disk storage / room for more VMs
 - `tank/media` dataset — exported via NFS (plex01) and SMB (Windows access)
 - 2 TB backup drive — not currently detected/connected, needs follow-up
 
 ## Future
 
-- ZFS Mirror (once a second matching/larger drive is added)
 - Snapshots
 - Automated Backups
 - Lock down NFS export to plex01's IP specifically
@@ -144,7 +146,7 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 
 | Device | Address |
 |---------|---------|
-| Proxmox | TBD |
+| Proxmox | 192.168.1.209 |
 | automation01 | 192.168.1.20 |
 | truenas01 | 192.168.1.40 |
 | plex01 | 192.168.1.50 |
@@ -163,13 +165,17 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [x] n8n
 - [x] Portainer (+ multi-host via Agent)
 - [x] Uptime Kuma
-- [x] TrueNAS SCALE (single-disk pool, NFS + SMB shares)
+- [x] TrueNAS SCALE (NFS + SMB shares)
 - [x] Plex (plex01, NFS-backed media)
+- [x] ZFS mirror for tank pool
+- [x] Second SSD wiped and built into an `ssd2-thin` LVM-Thin pool
+- [x] Reboot resilience (VM autostart/order, NFS mount options)
 
 ## In Progress
 
 - [ ] Migrating existing media library onto TrueNAS
 - [ ] Reconnecting/verifying the 2TB backup drive
+- [ ] Installing/configuring the 2.5GbE switch
 
 ## Planned
 
@@ -178,7 +184,6 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [ ] Ansible
 - [ ] Kubernetes
 - [ ] Windows Server (dc01) / AD
-- [ ] ZFS mirror for tank pool
 - [ ] AI Stack (Ollama / Open WebUI via RTX 4000)
 - [ ] n8n workflows calling AI (Claude / local LLMs)
 - [ ] MCP fundamentals (run existing community MCP servers)
