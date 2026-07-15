@@ -32,3 +32,28 @@
 
 ### General
 - Added a repo-root `.gitignore` (`*.env`) early, before adding services with real credentials (Postgres, Redis, etc.), so secrets never get committed by accident.
+
+## 2026-07-15
+
+### Hardware: second SSD and second 4TB HDD
+- A wiped/repurposed second 512GB SSD (identical model to the boot SSD) was built into a new `ssd2-thin` LVM-Thin pool on Proxmox for extra VM disk storage. Confirmed it's **M.2 SATA, not NVMe** — the giveaway is that it shows up as `/dev/sdX` with an `ata-` prefixed `by-id` path rather than `/dev/nvmeXn1`/`nvme-` prefix; "M.2" is only the connector shape, not the protocol. So this addition relieves I/O contention across VMs but isn't a raw speed upgrade, since it shares the same SATA ceiling (~550MB/s) as the existing boot SSD.
+- A second 4TB HDD (HGST Ultrastar `HUS726040ALE610`) wasn't detected by Proxmox at all after installing it — no trace in `dmesg`, not even a failed link attempt. Root cause was physical: reseating the SATA data and power cables (and trying a different port) fixed it. This is the **second** drive in this lab to have a "not detected" scare (the original 2TB backup drive, still unresolved) — worth suspecting cabling/connector availability first on this hardware before assuming a software problem.
+- **Proxmox `/dev/sdX` letters are not stable** — confirmed for a third time across sessions; they reassigned again the moment the new drive was added. Always re-run `ls -la /dev/disk/by-id/ | grep -v part` fresh and cross-check serial numbers immediately before any destructive or passthrough command — never trust a remembered letter mapping, even from earlier in the same session.
+- Applying the earlier duplicate-serial lesson proactively (`serial=` set on the `qm set --scsiN` command from the start, instead of after hitting the error) avoided repeating that TrueNAS pool-creation failure this time.
+
+### ZFS mirror
+- Extended the previously-unmirrored `tank` pool into a proper mirror via TrueNAS's **Storage → (pool) → Extend** on the existing single-disk vdev, adding the new HGST drive. Resilvered cleanly in 11 seconds (only ~1.7GB of real data existed yet), 0 errors. Confirmed via `zpool status tank` — the two disks must appear nested under a shared `mirror-0` line; if they'd shown as separate top-level vdevs instead, that would have been an (undesired) stripe, not a mirror.
+- ZFS mirrors don't require matching drives — pairing a WD Red with an HGST Ultrastar (different brand entirely) worked with no issue, only capacity needs to be adequate.
+
+### Homepage dashboard
+- Added [gethomepage.dev](https://gethomepage.dev) to `automation01` as a single-pane landing page linking every service, configured entirely via mounted YAML files (`settings.yaml`, `services.yaml`, `widgets.yaml`, `bookmarks.yaml`).
+- Hit a `Host validation failed` error on first load — recent Homepage/Next.js versions validate the incoming `Host` header to prevent DNS-rebinding-style attacks, and reject requests from hosts not explicitly allowed. Fixed by setting `HOMEPAGE_ALLOWED_HOSTS=192.168.1.20:3000` in the container's environment.
+- **Reinforced an important workflow gap**: editing files on the Windows dev machine only changes the local repo there. For a VM's `git pull` to see anything new, changes must be **committed locally *and* pushed to GitHub** first — `git pull` fetches from the remote, not from wherever the edits were actually made. This caused real confusion twice (Homepage not starting, then not picking up config changes) before the full edit → commit → push → pull → redeploy chain was made explicit.
+
+### Uptime Kuma major version upgrade (1.23.17 → 2.4.0)
+- The compose file pinned the image to `louislam/uptime-kuma:1` (floating within major version 1 only) — this is why `docker compose pull && up -d` silently did nothing when v2 came out. Floating tags only follow their pinned major version by design; this is a safety feature, not a bug.
+- Bumping the tag straight to `:2` on the live production container caused a real (if brief) outage while it ran its internal database migration on first boot — normal behavior for a major version jump with a schema change, not a failure, but unsettling in the moment since the page was simply unreachable until the migration finished (~1 minute).
+- **Lesson for future major-version upgrades**: don't test a migration against the live data volume first. Clone the named volume, run the new image against the clone in a disposable container on a throwaway port, confirm it starts and migrates cleanly, *then* redeploy production with confidence. The cutover still briefly migrates the live volume for real (the clone can go stale while testing), but the risk of an unknown/broken migration is eliminated before touching production.
+
+### Deferred
+- Explored two different architectures for Uptime Kuma → n8n → Discord outage alerting (webhook-push with time-window batching via workflow static data; then a poll-and-diff design against Uptime Kuma's Prometheus `/metrics` endpoint) before pivoting toward having n8n health-check services directly via HTTP rather than depending on Uptime Kuma's API shape at all. **Not yet implemented** — pinned for a later session. Whenever I pick this up next, I should start from the direct-HTTP-polling design (Schedule Trigger → per-service HTTP checks with `Ignore SSL Issues` + `On Error: Continue` → diff against last-known state via `$getWorkflowStaticData` → Discord only on change), not the earlier Uptime Kuma-dependent versions.

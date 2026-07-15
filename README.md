@@ -81,7 +81,8 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 
 - n8n (automation01)
 - Portainer + Agent (automation01, plex01)
-- Uptime Kuma (automation01)
+- Uptime Kuma (automation01) — v2.4.0
+- Homepage dashboard (automation01)
 - Plex (plex01)
 
 ## Planned
@@ -170,12 +171,15 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [x] ZFS mirror for tank pool
 - [x] Second SSD wiped and built into an `ssd2-thin` LVM-Thin pool
 - [x] Reboot resilience (VM autostart/order, NFS mount options)
+- [x] Homepage dashboard (single landing page for all services)
+- [x] Uptime Kuma upgraded 1.23.17 → 2.4.0
 
 ## In Progress
 
 - [ ] Migrating existing media library onto TrueNAS
 - [ ] Reconnecting/verifying the 2TB backup drive
 - [ ] Installing/configuring the 2.5GbE switch
+- [ ] Uptime Kuma → n8n → Discord outage alerting — design explored, not yet built (see LessonsLearned "Deferred")
 
 ## Planned
 

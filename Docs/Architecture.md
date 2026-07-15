@@ -13,7 +13,8 @@ Proxmox VE 9.2.2 (bare metal, 192.168.1.209, 32GB RAM)
 │   └── Docker Compose (Docker/Automation/)
 │       ├── n8n            :5678
 │       ├── portainer       :9443 (management UI, Docker Agent-connected to plex01)
-│       └── uptime-kuma     :3001
+│       ├── uptime-kuma     :3001 (v2.4.0)
+│       └── homepage        :3000 (dashboard linking every service)
 │
 ├── truenas01 (VMID 200) — 192.168.1.40 — 4 vCPU / 8GB RAM / 32GB boot + 2x 4TB passthrough
 │   └── TrueNAS SCALE Community Edition 25.10.4
@@ -56,6 +57,8 @@ Net effect: a full power cycle should bring the whole lab back up unattended, in
 - **plex01 was not part of the original roadmap at all.** It was added to consolidate an existing, separate Plex server the user already ran, using TrueNAS storage as the shared backing store.
 - **The 2TB backup drive from the original hardware inventory is currently not detected on the host** — needs investigation before it can serve its planned role as a backup target.
 - **A second SSD was added and built into `ssd2-thin`**, a second LVM-Thin pool for VM disk storage — wasn't in the original plan, added opportunistically once the hardware was available. Same model as the boot SSD (M.2 SATA, not NVMe), so it relieves I/O contention across VMs rather than providing a raw speed increase.
+- **Homepage dashboard was added ahead of the monitoring stack** — not in the original roadmap, added as a quick single-pane landing page for all services while Grafana/Prometheus/Loki remain unbuilt.
+- **Uptime Kuma → n8n → Discord outage alerting was explored but deferred** — two designs were prototyped (webhook-push with batching, then poll-and-diff against Uptime Kuma's metrics endpoint) before the direction shifted toward n8n health-checking services directly over HTTP instead of depending on Uptime Kuma at all. Not yet built; see [LessonsLearned.md](LessonsLearned.md) for the intended design to resume from.
 
 ## Not yet built (from the original roadmap)
 
