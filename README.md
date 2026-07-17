@@ -6,7 +6,7 @@ This repository documents my self-hosted infrastructure for building, testing, a
 
 The lab is designed to mirror production environments as closely as possible while remaining cost effective for home use.
 
-See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, and [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way.
+See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way, and [Docs/Commands.md](Docs/Commands.md) for a running cheat sheet of commonly used commands.
 
 ---
 
@@ -48,8 +48,7 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 # Hardware Wishlist
 
 - [x] Second 4TB+ NAS HDD — `tank` ZFS pool on truenas01 is now a mirror (resilvered 2026-07-15, 0 errors)
-- [x] 2.5GbE switch — acquired, not yet installed/configured
-- [ ] Install/configure the 2.5GbE switch and confirm NICs negotiate 2.5GbE on Proxmox/automation01/truenas01/plex01
+- [x] 2.5GbE switch — installed 2026-07-17; Proxmox actually ended up on the switch's 10G port (its 2.5G-tier NICs turned out to be 1G-only), Windows workstation on a 2.5G port. See [Docs/Network.md](Docs/Network.md).
 
 ---
 
@@ -173,12 +172,12 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [x] Reboot resilience (VM autostart/order, NFS mount options)
 - [x] Homepage dashboard (single landing page for all services)
 - [x] Uptime Kuma upgraded 1.23.17 → 2.4.0
+- [x] 2.5GbE switch installed — Proxmox on a 10G port, Windows workstation on 2.5G
 
 ## In Progress
 
 - [ ] Migrating existing media library onto TrueNAS
 - [ ] Reconnecting/verifying the 2TB backup drive
-- [ ] Installing/configuring the 2.5GbE switch
 - [ ] Uptime Kuma → n8n → Discord outage alerting — design explored, not yet built (see LessonsLearned "Deferred")
 
 ## Planned

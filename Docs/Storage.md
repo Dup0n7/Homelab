@@ -38,3 +38,15 @@ Not yet implemented. Per the original plan: Proxmox's native snapshots/backups f
 
 - 2TB backup drive needs to be physically reconnected/verified before it can serve as a backup target.
 - Lock down the NFS export to `plex01`'s IP specifically (still allowing the whole `/24` today).
+
+## Decisions
+
+### NVMe / cache device — evaluated, declined (2026-07-17)
+
+After the 2.5GbE switch install (see [Network.md](Network.md)), Windows-to-`tank` copy speed leveled off around ~150MB/s — the network was no longer the bottleneck, the HDD mirror's sequential write speed was. Considered adding NVMe storage or a ZFS cache/log device (L2ARC/SLOG) to push past this, and decided against it:
+
+- **NVMe is expensive relative to the actual benefit here.** True 1GB/s+ throughput needs NVMe-class storage or many HDDs striped in parallel — either a real cost or a real restructuring of the pool, not a small change.
+- **L2ARC/SLOG wouldn't actually fix this specific bottleneck anyway.** L2ARC accelerates random *reads*; SLOG only accelerates *synchronous* writes. A bulk file copy is neither — it's a large async sequential write, which is bounded by the mirror's raw disk speed regardless of any cache device added.
+- **The actual workload (Plex streaming) doesn't need it.** Even 4K HDR streaming needs a small fraction of the throughput a spinning-disk mirror already provides. The only place higher throughput would matter is one-time bulk migrations, which don't justify a standing hardware investment.
+
+Revisit only if a concrete need appears (e.g. restructuring `tank` with more drives for parallelism, or a workload that's actually read-heavy/random-access enough for L2ARC to help).
