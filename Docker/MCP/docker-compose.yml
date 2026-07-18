@@ -1,0 +1,10 @@
+services:
+  mcp-uptime-kuma:
+    build:
+      context: ../../mcp-servers/uptime-kuma
+    container_name: mcp-uptime-kuma
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "3100:3100"
