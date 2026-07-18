@@ -181,9 +181,10 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [ ] Migrating existing media library onto TrueNAS
 - [ ] Reconnecting/verifying the 2TB backup drive
 - [ ] Uptime Kuma → n8n → Discord outage alerting — design explored, not yet built (see LessonsLearned "Deferred")
-- [ ] First custom MCP server (`homelab-uptime-kuma`) — built, deployed, and running on automation01; pending final Claude Code approval/end-to-end test (see [Docs/AI.md](Docs/AI.md))
-- [ ] n8n-mcp community MCP server (`mcp-n8n`) — added to `Docker/MCP/docker-compose.yml`, needs deploying to automation01 (AUTH_TOKEN + n8n API key generation still pending) — see [Docs/AI.md](Docs/AI.md)
-- [x] n8n-skills (14 skills + router skill) installed to `~/.claude/skills/` — active immediately, no deploy needed
+- [x] First custom MCP server (`homelab-uptime-kuma`) — built, deployed, running on automation01, and confirmed connected via `/mcp` (see [Docs/AI.md](Docs/AI.md))
+- [x] n8n-mcp community MCP server (`mcp-n8n`) — deployed to automation01 and confirmed connected via `/mcp` (see [Docs/AI.md](Docs/AI.md))
+- [x] n8n-skills (14 skills + router skill) installed to `~/.claude/skills/`
+- [ ] `/uptime-status` slash command (`.claude/commands/uptime-status.md`) — lists every Uptime Kuma-monitored service and its status via the `homelab-uptime-kuma` MCP tool; added but not yet verified working (custom commands load at session start, same as MCP servers)
 
 ## Planned
 

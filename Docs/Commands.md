@@ -24,6 +24,29 @@ docker compose up -d
 
 ---
 
+## Deploying/updating an MCP server in Docker/MCP/
+
+**Context**: `Docker/MCP/docker-compose.yml` runs one container per MCP server, all sharing one `.env` file in that folder. Adding a new server (e.g. `mcp-n8n`) means appending its vars to the *existing* `.env` rather than overwriting it — the file already holds working vars for the other service(s).
+
+```bash
+# Windows dev machine: commit + push as usual (see "Deploy workflow" above)
+
+# On automation01
+ssh kyle@192.168.1.20
+cd ~/homelab && git pull
+cd Docker/MCP
+nano .env          # append the new service's vars — see .env.example for the full list
+docker compose up -d   # only creates/recreates the container(s) whose config changed
+docker logs mcp-n8n
+curl http://192.168.1.20:3101/health
+```
+
+Then, on Windows: open a **new** Claude Code session (MCP servers only load at session start) and approve the new `.mcp.json` entry when prompted — same one-time approval gotcha as the first custom MCP server.
+
+**AUTH_TOKEN note (n8n-mcp specifically)**: the same token value has to exist in two places — `Docker/MCP/.env`'s `AUTH_TOKEN` on the VM, and the local `N8N_MCP_AUTH_TOKEN` env var so `.mcp.json`'s `${N8N_MCP_AUTH_TOKEN}` substitution resolves. On Windows this is auto-loaded from `pw.env` via a PowerShell profile snippet — an interim measure until Vault (see [Security.md](Security.md)) replaces plaintext `pw.env`.
+
+---
+
 ## Proxmox: identifying disks safely
 
 **Context**: `/dev/sdX` letters are **not stable** on this host — they've reassigned three separate times across sessions whenever a drive was added or the host rebooted. Never trust a remembered letter mapping, even from earlier in the same session. Always re-run this immediately before anything destructive or passthrough-related, and cross-check the serial number against known drives:

@@ -4,7 +4,7 @@
 
 MCP (Model Context Protocol) and AI agent tooling are becoming standard ways to connect AI systems to infrastructure and tools — conceptually similar to how OAuth/SCIM standardized identity integrations. Given the career direction behind this lab (IAM/platform engineering), building real MCP servers and agents against this homelab's own infrastructure is a natural, differentiated portfolio project rather than a detour.
 
-Status: **Phase 4 underway** — first custom MCP server built and deployed 2026-07-17 (see below). Phases 1-3 (Ollama/Open WebUI, n8n+AI, MCP fundamentals via community servers) are still not started — this phase jumped ahead because a concrete need (AI-queryable homelab status) made it worth building directly rather than waiting.
+Status: **Phase 4 underway** — first custom MCP server built and deployed 2026-07-17, and a second (adopted, community) MCP server (`n8n-mcp`) deployed 2026-07-18 — both confirmed connected via `/mcp` (2 servers connected). Phases 1-3 (Ollama/Open WebUI, n8n+AI) are still not started; Phase 3 (MCP fundamentals via community servers) is effectively satisfied by adopting `n8n-mcp` rather than a separate learning exercise.
 
 ## Planned track
 
@@ -37,6 +37,10 @@ These build on each other roughly in order, though not strictly gated — some (
 | Source | `mcp-servers/uptime-kuma/` — a new top-level folder for custom MCP server source code, since these are real applications with their own `package.json`/`Dockerfile`, distinct from the `Docker/*` folders which mostly just wrap published images |
 | Client config | `.mcp.json` at repo root (project-scoped, committed to git — safe since it holds only a plain LAN URL, no secrets) |
 
+**Status: confirmed connected** via `/mcp` (2026-07-18).
+
+**`/uptime-status` slash command added (2026-07-18):** `.claude/commands/uptime-status.md` — calls `get_service_status` and lays out every monitored service with its current status, sorting anything not "up" to the top. Distinct from a skill (auto-triggers on relevant conversation content) — this is an explicit `/`-invoked command. Custom commands load at session start like MCP servers, so it wasn't visible until a fresh session — not yet confirmed working end-to-end.
+
 Proxmox and TrueNAS tools are the natural next additions — each needs its own API token set up first (Proxmox: Datacenter → API Tokens; TrueNAS: its own API key), unlike Uptime Kuma which reused an already-working integration.
 
 **Added (2026-07-18): `n8n-mcp`** (community server, [czlonkowski/n8n-mcp](https://github.com/czlonkowski/n8n-mcp)) — not custom-built like the Uptime Kuma tool, but the first *adopted* MCP server, giving Claude Code direct knowledge of all n8n nodes/docs/templates plus (with an n8n API key configured) the ability to create/update/validate/deploy workflows directly against the `automation01` n8n instance.
@@ -48,6 +52,8 @@ Proxmox and TrueNAS tools are the natural next additions — each needs its own 
 | Hosting | Same `Docker/MCP/docker-compose.yml` on `automation01`, its **own container** (`mcp-n8n`), port `3101` |
 | Auth | Requires a bearer `AUTH_TOKEN` (HTTP mode is unauthenticated-by-default otherwise) — set in `Docker/MCP/.env` on the VM, and mirrored into the local `N8N_MCP_AUTH_TOKEN` shell env var so root `.mcp.json`'s `${N8N_MCP_AUTH_TOKEN}` substitution resolves it. Keeps the actual token out of git even though `.mcp.json` itself stays committed. |
 | n8n API access | Optional `N8N_API_URL`/`N8N_API_KEY` (n8n → Settings → n8n API → API Keys) — without it, only read-only tools (node search, docs, templates) work; with it, workflow create/update/deploy tools activate too. |
+
+**Status: deployed and confirmed connected** via `/mcp` (2026-07-18) — `AUTH_TOKEN` and `N8N_API_KEY` both configured, so workflow create/update/deploy tools should be active, not just read-only ones.
 
 **Same container vs. separate — resolved:** one Docker container per MCP server, all sharing one `docker-compose.yml` per functional host (`automation01`). Reasoning: each server is a different image/runtime/release cadence (custom TypeScript app vs. published npm-based image), so Compose's normal multi-service model fits better than merging them into one container — and it keeps the pattern trivially repeatable for the still-planned Proxmox/TrueNAS MCP tools.
 
