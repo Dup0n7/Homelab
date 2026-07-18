@@ -6,7 +6,7 @@ This repository documents my self-hosted infrastructure for building, testing, a
 
 The lab is designed to mirror production environments as closely as possible while remaining cost effective for home use.
 
-See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way, and [Docs/Commands.md](Docs/Commands.md) for a running cheat sheet of commonly used commands.
+See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, [Docs/Security.md](Docs/Security.md) for the credential/secrets management plan, [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way, and [Docs/Commands.md](Docs/Commands.md) for a running cheat sheet of commonly used commands.
 
 ---
 
@@ -24,6 +24,7 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 - Learn the Model Context Protocol (MCP) and build a custom MCP server exposing this homelab's infrastructure to AI agents
 - Build custom AI agents (e.g. via the Claude Agent SDK) that can operate against homelab services
 - Integrate AI (Claude, local LLMs via Ollama) into n8n automation workflows
+- Build an enterprise-style secrets management environment with HashiCorp Vault for machine/app secrets (see [Docs/Security.md](Docs/Security.md)) — human/admin logins stay in Google Password Manager, not self-hosted
 - Document all infrastructure as code
 
 ---
@@ -83,6 +84,7 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 - Uptime Kuma (automation01) — v2.4.0
 - Homepage dashboard (automation01)
 - Plex (plex01)
+- mcp-n8n (automation01) — community MCP server giving Claude Code n8n node/workflow knowledge, see [Docs/AI.md](Docs/AI.md)
 
 ## Planned
 
@@ -94,7 +96,7 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 - Redis
 - Nextcloud
 - Immich
-- Vaultwarden
+- HashiCorp Vault (machine/app secrets — see [Docs/Security.md](Docs/Security.md))
 - Open WebUI
 - Ollama
 
@@ -179,6 +181,9 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [ ] Migrating existing media library onto TrueNAS
 - [ ] Reconnecting/verifying the 2TB backup drive
 - [ ] Uptime Kuma → n8n → Discord outage alerting — design explored, not yet built (see LessonsLearned "Deferred")
+- [ ] First custom MCP server (`homelab-uptime-kuma`) — built, deployed, and running on automation01; pending final Claude Code approval/end-to-end test (see [Docs/AI.md](Docs/AI.md))
+- [ ] n8n-mcp community MCP server (`mcp-n8n`) — added to `Docker/MCP/docker-compose.yml`, needs deploying to automation01 (AUTH_TOKEN + n8n API key generation still pending) — see [Docs/AI.md](Docs/AI.md)
+- [x] n8n-skills (14 skills + router skill) installed to `~/.claude/skills/` — active immediately, no deploy needed
 
 ## Planned
 
@@ -189,9 +194,10 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [ ] Windows Server (dc01) / AD
 - [ ] AI Stack (Ollama / Open WebUI via RTX 4000)
 - [ ] n8n workflows calling AI (Claude / local LLMs)
-- [ ] MCP fundamentals (run existing community MCP servers)
-- [ ] Custom MCP server exposing homelab infrastructure (Proxmox/TrueNAS/Uptime Kuma status)
+- [x] MCP fundamentals (run existing community MCP servers) — n8n-mcp adopted 2026-07-18
+- [ ] Proxmox + TrueNAS MCP tools (Uptime Kuma tool already built)
 - [ ] Custom AI agents (e.g. via the Claude Agent SDK) operating against homelab services
+- [ ] HashiCorp Vault (machine/app secrets — Docker deploy, KV engine, policies, AppRole) — see [Docs/Security.md](Docs/Security.md)
 
 ---
 

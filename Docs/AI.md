@@ -4,7 +4,7 @@
 
 MCP (Model Context Protocol) and AI agent tooling are becoming standard ways to connect AI systems to infrastructure and tools — conceptually similar to how OAuth/SCIM standardized identity integrations. Given the career direction behind this lab (IAM/platform engineering), building real MCP servers and agents against this homelab's own infrastructure is a natural, differentiated portfolio project rather than a detour.
 
-Status: **planned, not yet started.** Logged here ahead of time per the original "document the plan before building it" habit from the repo's early setup.
+Status: **Phase 4 underway** — first custom MCP server built and deployed 2026-07-17 (see below). Phases 1-3 (Ollama/Open WebUI, n8n+AI, MCP fundamentals via community servers) are still not started — this phase jumped ahead because a concrete need (AI-queryable homelab status) made it worth building directly rather than waiting.
 
 ## Planned track
 
@@ -25,6 +25,33 @@ These build on each other roughly in order, though not strictly gated — some (
 ### 4. Custom MCP server for this homelab
 - Build an MCP server that exposes real infrastructure as callable tools — e.g. Proxmox VM status, TrueNAS pool/dataset health, Uptime Kuma alert state
 - Goal: be able to ask an AI agent "what's the health of my homelab" and get a real answer sourced from live systems, not a guess
+
+**Built (2026-07-17): `homelab-uptime-kuma` MCP server** — first tool live: `get_service_status`, wrapping the same Uptime Kuma `/metrics` endpoint used in the earlier n8n alerting design. Details:
+
+| Property | Value |
+|---|---|
+| Language | TypeScript/Node — chosen explicitly over Python for alignment with the target job market (IAM/platform engineering roles), not a technical necessity |
+| SDK | `@modelcontextprotocol/sdk` v1.29.0 (the current **stable** package — see Lessons Learned for why this matters) |
+| Transport | Streamable HTTP (the current standard for remote MCP servers, not stdio) |
+| Hosting | `Docker/MCP/docker-compose.yml` on `automation01`, port `3100` — chosen over running on the PC so it's always available and reusable later by n8n or other agents, not just interactive Claude sessions |
+| Source | `mcp-servers/uptime-kuma/` — a new top-level folder for custom MCP server source code, since these are real applications with their own `package.json`/`Dockerfile`, distinct from the `Docker/*` folders which mostly just wrap published images |
+| Client config | `.mcp.json` at repo root (project-scoped, committed to git — safe since it holds only a plain LAN URL, no secrets) |
+
+Proxmox and TrueNAS tools are the natural next additions — each needs its own API token set up first (Proxmox: Datacenter → API Tokens; TrueNAS: its own API key), unlike Uptime Kuma which reused an already-working integration.
+
+**Added (2026-07-18): `n8n-mcp`** (community server, [czlonkowski/n8n-mcp](https://github.com/czlonkowski/n8n-mcp)) — not custom-built like the Uptime Kuma tool, but the first *adopted* MCP server, giving Claude Code direct knowledge of all n8n nodes/docs/templates plus (with an n8n API key configured) the ability to create/update/validate/deploy workflows directly against the `automation01` n8n instance.
+
+| Property | Value |
+|---|---|
+| Image | `ghcr.io/czlonkowski/n8n-mcp:latest` (published image, not custom-built — unlike `mcp-servers/uptime-kuma/`) |
+| Transport | Streamable HTTP, same pattern as the Uptime Kuma MCP server |
+| Hosting | Same `Docker/MCP/docker-compose.yml` on `automation01`, its **own container** (`mcp-n8n`), port `3101` |
+| Auth | Requires a bearer `AUTH_TOKEN` (HTTP mode is unauthenticated-by-default otherwise) — set in `Docker/MCP/.env` on the VM, and mirrored into the local `N8N_MCP_AUTH_TOKEN` shell env var so root `.mcp.json`'s `${N8N_MCP_AUTH_TOKEN}` substitution resolves it. Keeps the actual token out of git even though `.mcp.json` itself stays committed. |
+| n8n API access | Optional `N8N_API_URL`/`N8N_API_KEY` (n8n → Settings → n8n API → API Keys) — without it, only read-only tools (node search, docs, templates) work; with it, workflow create/update/deploy tools activate too. |
+
+**Same container vs. separate — resolved:** one Docker container per MCP server, all sharing one `docker-compose.yml` per functional host (`automation01`). Reasoning: each server is a different image/runtime/release cadence (custom TypeScript app vs. published npm-based image), so Compose's normal multi-service model fits better than merging them into one container — and it keeps the pattern trivially repeatable for the still-planned Proxmox/TrueNAS MCP tools.
+
+**Skills added (2026-07-18):** [czlonkowski/n8n-skills](https://github.com/czlonkowski/n8n-skills) — 14 skills plus a router skill (`using-n8n-mcp-skills`), installed via the documented manual method (`skills/*` copied into `~/.claude/skills/`) rather than the plugin/marketplace method, since the `claude` CLI still isn't reachable from any shell here (same blocker noted 2026-07-17). This means the repo's optional hooks layer (`hooks/hooks.json` — pre/post-tool-use scripts that intercept `n8n_create_workflow`, `validate_workflow`, etc.) was **not** installed; only the plugin/marketplace method wires those up. Skills activate automatically by content-matching, so this isn't a blocker — revisit installing the hooks only if the `claude` CLI reachability issue gets resolved and the enforcement layer seems worth the added complexity.
 
 ### 5. Custom AI agents
 - Build agents (e.g. via the Claude Agent SDK) that operate against homelab services — not just answering questions, but taking action (restarting a container, creating a VM, responding to an alert)

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "homelab-uptime-kuma": {
+      "type": "http",
+      "url": "http://192.168.1.20:3100/mcp"
+    },
+    "n8n-mcp": {
+      "type": "http",
+      "url": "http://192.168.1.20:3101/mcp",
+      "headers": {
+        "Authorization": "Bearer ${N8N_MCP_AUTH_TOKEN}"
+      }
+    }
+  }
+}

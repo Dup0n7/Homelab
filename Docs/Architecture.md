@@ -16,6 +16,13 @@ Proxmox VE 9.2.2 (bare metal, 192.168.1.209, 32GB RAM)
 │       ├── uptime-kuma     :3001 (v2.4.0)
 │       └── homepage        :3000 (dashboard linking every service)
 │
+├── automation01 (cont.) — Docker Compose (Docker/MCP/)
+│   ├── mcp-uptime-kuma      :3100 — custom TypeScript MCP server, Streamable HTTP transport,
+│   │                                exposes Uptime Kuma status as a tool for Claude Code
+│   └── mcp-n8n              :3101 — community MCP server (ghcr.io/czlonkowski/n8n-mcp),
+│                                     Streamable HTTP + bearer auth, gives Claude Code n8n
+│                                     node/docs/template knowledge + workflow management
+│
 ├── truenas01 (VMID 200) — 192.168.1.40 — 4 vCPU / 8GB RAM / 32GB boot + 2x 4TB passthrough
 │   └── TrueNAS SCALE Community Edition 25.10.4
 │       └── pool "tank" — MIRROR (WD Red 4TB + HGST Ultrastar 4TB), resilvered 2026-07-15
@@ -59,6 +66,8 @@ Net effect: a full power cycle should bring the whole lab back up unattended, in
 - **A second SSD was added and built into `ssd2-thin`**, a second LVM-Thin pool for VM disk storage — wasn't in the original plan, added opportunistically once the hardware was available. Same model as the boot SSD (M.2 SATA, not NVMe), so it relieves I/O contention across VMs rather than providing a raw speed increase.
 - **Homepage dashboard was added ahead of the monitoring stack** — not in the original roadmap, added as a quick single-pane landing page for all services while Grafana/Prometheus/Loki remain unbuilt.
 - **Uptime Kuma → n8n → Discord outage alerting was explored but deferred** — two designs were prototyped (webhook-push with batching, then poll-and-diff against Uptime Kuma's metrics endpoint) before the direction shifted toward n8n health-checking services directly over HTTP instead of depending on Uptime Kuma at all. Not yet built; see [LessonsLearned.md](LessonsLearned.md) for the intended design to resume from.
+- **First custom MCP server built ahead of Phases 1-3 of the AI roadmap** — jumped straight to Phase 4 (custom MCP server) since a concrete need existed, skipping the originally-planned Ollama/Open WebUI and "learn MCP via community servers" steps for now. See [AI.md](AI.md).
+- **New top-level `mcp-servers/` folder** — holds custom MCP server source code (TypeScript projects with their own `package.json`/`Dockerfile`), distinct from the `Docker/*` folders which mostly wrap published images rather than custom-built ones.
 
 ## Not yet built (from the original roadmap)
 
@@ -69,5 +78,6 @@ Net effect: a full power cycle should bring the whole lab back up unattended, in
 - Ansible (configuration management)
 - Kubernetes / K3s cluster
 - Proxmox Backup Server (explicitly deferred until the lab is much larger)
+- HashiCorp Vault (machine/app secrets manager) — see [Security.md](Security.md) for the full plan; human/admin passwords deliberately stay in Google Password Manager, not self-hosted
 
-See [Network.md](Network.md) for IP assignments, [Storage.md](Storage.md) for disk/pool layout, and [LessonsLearned.md](LessonsLearned.md) for gotchas encountered along the way.
+See [Network.md](Network.md) for IP assignments, [Storage.md](Storage.md) for disk/pool layout, [Security.md](Security.md) for the credential/secrets management plan, and [LessonsLearned.md](LessonsLearned.md) for gotchas encountered along the way.

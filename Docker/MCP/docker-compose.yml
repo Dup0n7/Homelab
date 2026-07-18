@@ -8,3 +8,17 @@ services:
       - .env
     ports:
       - "3100:3100"
+
+  mcp-n8n:
+    image: ghcr.io/czlonkowski/n8n-mcp:latest
+    container_name: mcp-n8n
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "3101:3000"
+    volumes:
+      - n8n-mcp-data:/app/data
+
+volumes:
+  n8n-mcp-data:
