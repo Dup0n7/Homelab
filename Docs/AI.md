@@ -4,7 +4,7 @@
 
 MCP (Model Context Protocol) and AI agent tooling are becoming standard ways to connect AI systems to infrastructure and tools — conceptually similar to how OAuth/SCIM standardized identity integrations. Given the career direction behind this lab (IAM/platform engineering), building real MCP servers and agents against this homelab's own infrastructure is a natural, differentiated portfolio project rather than a detour.
 
-Status: **Phase 4 underway** — first custom MCP server built and deployed 2026-07-17, and a second (adopted, community) MCP server (`n8n-mcp`) deployed 2026-07-18 — both confirmed connected via `/mcp` (2 servers connected). Phases 1-3 (Ollama/Open WebUI, n8n+AI) are still not started; Phase 3 (MCP fundamentals via community servers) is effectively satisfied by adopting `n8n-mcp` rather than a separate learning exercise.
+Status: **Phase 4 underway** — first custom MCP server built and deployed 2026-07-17, and a second (adopted, community) MCP server (`n8n-mcp`) deployed 2026-07-18 — both confirmed connected via `/mcp` (2 servers connected). Phases 1-3 (Ollama/Open WebUI, n8n+AI) are still not started; Phase 3 (MCP fundamentals via community servers) is effectively satisfied by adopting `n8n-mcp` rather than a separate learning exercise. `n8n-mcp`'s workflow-management tools (not just node/docs search) were confirmed working end-to-end the same day by building a real production workflow — see below.
 
 ## Planned track
 
@@ -59,6 +59,27 @@ Proxmox and TrueNAS tools are the natural next additions — each needs its own 
 
 **Skills added (2026-07-18):** [czlonkowski/n8n-skills](https://github.com/czlonkowski/n8n-skills) — 14 skills plus a router skill (`using-n8n-mcp-skills`), installed via the documented manual method (`skills/*` copied into `~/.claude/skills/`) rather than the plugin/marketplace method, since the `claude` CLI still isn't reachable from any shell here (same blocker noted 2026-07-17). This means the repo's optional hooks layer (`hooks/hooks.json` — pre/post-tool-use scripts that intercept `n8n_create_workflow`, `validate_workflow`, etc.) was **not** installed; only the plugin/marketplace method wires those up. Skills activate automatically by content-matching, so this isn't a blocker — revisit installing the hooks only if the `claude` CLI reachability issue gets resolved and the enforcement layer seems worth the added complexity.
 
+**First real workflow built via `n8n-mcp` (2026-07-18): `Daily Job & Learning Digest`** — the first time the toolchain's workflow-management tools (create/update/validate/test, not just node/docs search) were exercised end-to-end against a production workflow. Runs daily at 7am and sends one combined Discord message with three sections, numbered 1-5 each:
+
+| Section | Source(s) |
+|---|---|
+| Job postings (Solutions Engineer / Automation Engineer) | JSearch API via RapidAPI (`/search-v2`) |
+| Learning videos | YouTube Data API v3 search, topic rotates daily through 7 homelab/IAM-learning subjects keyed off day-of-week |
+| News (top 5 combined, most recent first) | Hacker News (Algolia API), Bleeping Computer + Wired (native RSS), an unofficial TLDR RSS mirror, Reddit r/Claude+ClaudeAI+ClaudeCode+OpenAI+artificial (RSS, not the API — see below) |
+
+Architecture: a Schedule Trigger fans out to all source branches in parallel; each has its own HTTP Request/RSS/formatter Code node; all 6 streams (jobs+videos already combined, plus the 5 news sources) converge through 5 chained `Merge` nodes before a single Code node builds the final message and a Discord node (webhook auth) sends it once.
+
+Real gotchas hit and resolved (full detail in [LessonsLearned.md](LessonsLearned.md) 2026-07-18):
+- n8n-mcp's SSRF protection blocks any private-IP `N8N_API_URL` by default — fixed with `WEBHOOK_SECURITY_MODE=permissive` in `Docker/MCP/.env`.
+- Reddit's Developer Platform now gates new app creation behind an approval process ("Responsible Builder Policy") — dropped the Reddit node/OAuth2 entirely in favor of Reddit's still-open, credential-free RSS endpoints.
+- JSearch's `/search` endpoint is deprecated in favor of `/search-v2`, which nests results one level deeper (`data.jobs`, not `data`) — caused a runtime `TypeError` caught via `n8n_executions` error inspection.
+- Wiring multiple branches into the same input on a regular node does **not** combine them into one execution in n8n — it runs that node once per incoming branch. This caused a "duplicate Discord post" bug, fixed by inserting chained `Merge` nodes for real fan-in.
+- Discord's plain message `content` doesn't render `[text](url)` masked links (embeds only) — switched to plain text + `<url>` (suppresses the link preview) plus the message's `SUPPRESS_EMBEDS` flag, and escaped literal `@`-mentions in third-party titles to prevent accidental pings.
+
+Credentials: RapidAPI (Header Auth) and the YouTube/Discord credentials all live in n8n's own encrypted credential store, not the workflow JSON — the RapidAPI one was created directly via `n8n_manage_credentials` (the user shared the key mid-conversation, so it went straight into n8n rather than being retyped into the UI).
+
+Status: built, iterated through several real bugs, and functional — job search, YouTube, and news branches all confirmed returning real data via test executions.
+
 ### 5. Custom AI agents
 - Build agents (e.g. via the Claude Agent SDK) that operate against homelab services — not just answering questions, but taking action (restarting a container, creating a VM, responding to an alert)
 - This is the furthest-out item and depends on the MCP server work above existing first, since agents need tools to call
@@ -67,3 +88,11 @@ Proxmox and TrueNAS tools are the natural next additions — each needs its own 
 
 - Where does this run — a new dedicated VM, or added to `automation01`?
 - How much of this is safe to let an agent *act* on autonomously vs. requiring approval (this matters a lot once agents can restart services or touch TrueNAS)
+
+## Future consideration: Docker MCP Gateway
+
+Evaluated 2026-07-18. Docker MCP Gateway (`docker mcp gateway run`, part of Docker's MCP Toolkit) fronts multiple MCP servers behind one proxy endpoint — curated/signed community catalog, centralized secrets via Docker's vault instead of env files, per-client tool enable/disable, request interceptors for auth/logging.
+
+Decision: not adopting yet. At 2 servers (`homelab-uptime-kuma`, `n8n-mcp`), the current pattern — one container per server in `Docker/MCP/docker-compose.yml`, each its own port, each listed individually in `.mcp.json` — already gives hands-on practice with per-server auth (bearer tokens, env-based secrets), which is the actual point of this phase for IAM/platform engineering skill-building. The gateway would abstract that away.
+
+Revisit once the server count grows past ~5 (Proxmox/TrueNAS additions plus whatever comes after) or managing individual `.mcp.json` entries/auth becomes real toil — worth standing up and testing then, both to see if it simplifies management and as its own portfolio-relevant piece (aggregation/gateway patterns are common in IAM/platform tooling).

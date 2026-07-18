@@ -45,6 +45,31 @@ Then, on Windows: open a **new** Claude Code session (MCP servers only load at s
 
 **AUTH_TOKEN note (n8n-mcp specifically)**: the same token value has to exist in two places — `Docker/MCP/.env`'s `AUTH_TOKEN` on the VM, and the local `N8N_MCP_AUTH_TOKEN` env var so `.mcp.json`'s `${N8N_MCP_AUTH_TOKEN}` substitution resolves. On Windows this is auto-loaded from `pw.env` via a PowerShell profile snippet — an interim measure until Vault (see [Security.md](Security.md)) replaces plaintext `pw.env`.
 
+**SSRF note (n8n-mcp specifically)**: the `n8n_*` workflow-management tools (create/update/list/etc.) fail with `SSRF protection: Private IP addresses not allowed` against any self-hosted n8n, since its `N8N_API_URL` is always a private LAN address. Fix: add `WEBHOOK_SECURITY_MODE=permissive` to `Docker/MCP/.env` and recreate just that container:
+
+```bash
+cd ~/homelab/Docker/MCP
+docker compose up -d mcp-n8n
+```
+
+---
+
+## Testing an n8n workflow with a Schedule Trigger
+
+**Context**: `n8n-mcp`'s `n8n_test_workflow` tool can only externally trigger webhook/form/chat-triggered workflows — n8n's public API has no endpoint to fire a Schedule (or Manual) trigger. Attempting it just returns an error saying so.
+
+```
+1. Open the workflow in the n8n editor (http://192.168.1.20:5678)
+2. Click "Test workflow" (top-right) — runs every node once immediately, ignoring the schedule
+3. Any node that failed turns red in the canvas
+```
+
+To inspect the result programmatically afterward (e.g. from Claude Code), use `n8n_executions`:
+```
+n8n_executions({action: "list", workflowId: "<id>", limit: 5})
+n8n_executions({action: "get", id: "<execution-id>", mode: "error"})   # full failing node + upstream payload
+```
+
 ---
 
 ## Proxmox: identifying disks safely

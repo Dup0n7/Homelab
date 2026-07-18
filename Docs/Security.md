@@ -25,6 +25,8 @@ Evaluated for storing secrets used by n8n, MCP servers, and future AI agents:
 
 **Chosen: HashiCorp Vault**, specifically because the primary objective is gaining enterprise-relevant skills (see [[user-career-goals]]) — Vault experience is more directly hireable than Infisical experience.
 
+**Docker secrets — considered, then explicitly rejected (2026-07-18).** Not really a competing option: Docker's native `secret create` feature requires Swarm mode, which this lab doesn't run (plain Compose). Standalone Compose's `secrets:` key is just a local file mount into the container — no centralized store, no policies/RBAC, no rotation, no dynamic credentials, no audit trail. It's a delivery mechanism, not a management plane, and offers little improvement over the current `.env`-file approach. Doesn't serve the long-term goal (agents pulling scoped, audited secrets from a centralized store) and isn't a resume-relevant skill the way Vault is. Vault remains the plan.
+
 ### Planned scope (initial)
 Credential management only — no dynamic secrets, PKI, or database credential generation yet. Store:
 - Proxmox API token

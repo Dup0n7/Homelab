@@ -185,6 +185,7 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [x] n8n-mcp community MCP server (`mcp-n8n`) — deployed to automation01 and confirmed connected via `/mcp` (see [Docs/AI.md](Docs/AI.md))
 - [x] n8n-skills (14 skills + router skill) installed to `~/.claude/skills/`
 - [ ] `/uptime-status` slash command (`.claude/commands/uptime-status.md`) — lists every Uptime Kuma-monitored service and its status via the `homelab-uptime-kuma` MCP tool; added but not yet verified working (custom commands load at session start, same as MCP servers)
+- [x] First real n8n workflow built via `n8n-mcp`: `Daily Job & Learning Digest` (2026-07-18) — daily Discord message combining job postings (JSearch/RapidAPI), YouTube learning picks, and top-5 news across Hacker News/Bleeping Computer/Wired/TLDR/Reddit. See [Docs/AI.md](Docs/AI.md).
 
 ## Planned
 

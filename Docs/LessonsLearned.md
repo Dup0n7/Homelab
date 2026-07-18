@@ -77,3 +77,32 @@
 - **The `claude` CLI wasn't reachable from any shell tried** — not from Claude Code's own Bash tool, not from PowerShell, not from the user's own terminal. Root cause not identified (environment/PATH-specific). Workaround: hand-write `.mcp.json` directly at the repo root in the exact format `claude mcp add --scope project` would have produced (`{"mcpServers": {"<name>": {"type": "http", "url": "..."}}}`) — this works identically without needing the CLI at all.
 - **Project-scoped servers defined via `.mcp.json` require a one-time interactive approval** before Claude Code will actually use them — run `claude` interactively in the project and approve when prompted. This is a deliberate safety measure (a cloned repo can't silently smuggle in an MCP server), not a bug. MCP servers also only load at session start, so a brand-new Claude Code session is needed after either adding or approving one.
 - Chose TypeScript/Node over Python for this and future MCP/agent work specifically because it better matches the target job market (IAM/platform engineering roles), not for a technical reason — worth remembering as the default language choice for the rest of the AI/MCP roadmap in [AI.md](AI.md).
+
+## 2026-07-18
+
+### n8n-mcp SSRF protection blocks a self-hosted n8n by default
+- The `mcp-n8n` container's documentation/node-search tools worked fine, but every `n8n_*` management tool (create/update/list workflows) failed with `SSRF protection: Private IP addresses not allowed`. n8n-mcp's built-in SSRF guard treats any RFC1918 address as suspicious by default — which is exactly what a self-hosted n8n's `N8N_API_URL` always is (`http://192.168.1.20:5678`).
+- Fix: `WEBHOOK_SECURITY_MODE=permissive` in `Docker/MCP/.env` (documented in `.env.example`). Safe here since n8n never leaves the LAN/Tailscale boundary; cloud metadata endpoints stay blocked in every mode regardless of this setting.
+
+### Reddit's Developer Platform now requires pre-approval for new apps
+- Attempted to create a Reddit "web app" (for a native Reddit node + OAuth2 credential, to pull posts from r/Claude, r/ClaudeAI, r/ClaudeCode, r/OpenAI, r/artificial for an n8n digest workflow) and hit Reddit's "Responsible Builder Policy" — new API access now requires an explicit approval request, not instant self-serve creation like it used to.
+- Pivoted to Reddit's still-open, credential-free RSS endpoints instead (`reddit.com/r/{sub}/new/.rss`), which support the same multi-subreddit "+" combining syntax as the JSON API (e.g. `r/Claude+ClaudeAI+ClaudeCode+OpenAI+artificial`) — one RSS Feed Read node covers all 5 subreddits, no OAuth needed at all.
+
+### JSearch (RapidAPI) `/search` endpoint is deprecated — use `/search-v2`
+- The older `/search` endpoint returned jobs directly under `response.data` (an array). `/search-v2` nests them one level deeper: `response.data.jobs`. Code written for the old shape throws `(response.data || []).slice is not a function` at runtime, since `data` is now an object, not an array.
+- **Lesson**: confirm the actual response shape from a real execution (`n8n_executions` in error mode surfaces the full upstream payload) rather than assuming docs/memory match whatever API version is currently live — RapidAPI listings especially can move to a `-v2` endpoint with a breaking shape change and leave the old one still technically reachable.
+
+### n8n architecture gotcha: multiple wires into one input ≠ one execution
+- Assumed that connecting several branches into the same input slot on a regular node (e.g. a Code node) would make n8n wait for all of them and run once with the combined data. This is wrong. Only a `Merge` node explicitly waits for multiple inputs before executing once — a regular node with several incoming wires on the same input slot runs once **per incoming branch** instead.
+- Symptom: a single Discord webhook node fired multiple times per scheduled run, each with only a partial slice of the aggregated data, instead of sending one clean combined message.
+- Fix: chain real `Merge` nodes (append mode) ahead of any node that must run exactly once per trigger. Since Merge only supports 2 inputs at a time (`numberOfInputs` defaults to 2 — see the n8n-node-configuration skill's Merge gotcha), converging N upstream branches into one downstream node always needs N-1 chained Merges.
+- **General rule going forward**: any node meant to execute once per trigger, fed by more than one upstream branch, needs an explicit Merge chain — never rely on multiple direct connections into the same input to combine data.
+
+### Discord message formatting
+- `[text](url)` markdown-style masked links don't render in a plain Discord message's `content` field (Discord only supports that inside embeds) — switched to plain text followed by the raw URL wrapped in `<...>`, which keeps the link clickable while suppressing the automatic embed/preview. Paired with the message's `SUPPRESS_EMBEDS` flag for a second, more reliable layer of preview suppression.
+- Any third-party text echoed into a Discord message (job titles, video titles, article headlines) can accidentally contain `@here`/`@everyone`-shaped substrings that Discord will parse as a real mention/ping. Defensive fix: insert a zero-width space after every `@` in untrusted text before building the message (`text.replace(/@/g, '@​')`).
+
+### First real n8n workflow built via `n8n-mcp`: `Daily Job & Learning Digest`
+- Built entirely through `n8n-mcp` tool calls (`search_nodes`, `get_node`, `n8n_create_workflow`, `n8n_update_partial_workflow`, `validate_workflow`, `n8n_executions`) rather than the n8n UI — the first time the workflow-management half of the toolchain was exercised end-to-end, not just docs/node lookups.
+- n8n's public API cannot externally trigger a Schedule Trigger workflow — only webhook/form/chat triggers can be invoked via `n8n_test_workflow`. Testing a scheduled workflow requires clicking **Test workflow** in the n8n editor itself, then inspecting the resulting run via `n8n_executions` (list, then get by id with `mode: "error"` to see the exact failing node/payload).
+- Full workflow detail in [AI.md](AI.md).
