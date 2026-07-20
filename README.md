@@ -85,6 +85,7 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 - Homepage dashboard (automation01)
 - Plex (plex01)
 - mcp-n8n (automation01) — community MCP server giving Claude Code n8n node/workflow knowledge, see [Docs/AI.md](Docs/AI.md)
+- Obsidian (testing) — vault at `S:\Obsidian\Dupontke`, `Homelab/Repo-Docs` auto-mirrored from this repo via git post-commit hook, see [Docs/Obsidian.md](Docs/Obsidian.md)
 
 ## Planned
 
@@ -99,6 +100,8 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 - HashiCorp Vault (machine/app secrets — see [Docs/Security.md](Docs/Security.md))
 - Open WebUI
 - Ollama
+- Homelable (network visual mapping — [github.com/Pouzor/homelable](https://github.com/Pouzor/homelable))
+- Hermes Agent (self-hosted Discord IT-admin agent, via Ollama — see [Docs/AI.md](Docs/AI.md))
 
 ---
 
@@ -186,6 +189,8 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [x] n8n-skills (14 skills + router skill) installed to `~/.claude/skills/`
 - [ ] `/uptime-status` slash command (`.claude/commands/uptime-status.md`) — lists every Uptime Kuma-monitored service and its status via the `homelab-uptime-kuma` MCP tool; added but not yet verified working (custom commands load at session start, same as MCP servers)
 - [x] First real n8n workflow built via `n8n-mcp`: `Daily Job & Learning Digest` (2026-07-18) — daily Discord message combining job postings (JSearch/RapidAPI), YouTube learning picks, and top-5 news across Hacker News/Bleeping Computer/Wired/TLDR/Reddit. See [Docs/AI.md](Docs/AI.md).
+- [x] Obsidian vault publishing started (2026-07-19) — `Homelab/Repo-Docs` mirrored from this repo's `README.md`/`Docs/*.md` via a tracked git post-commit hook (`.githooks/post-commit`); see [Docs/Obsidian.md](Docs/Obsidian.md)
+- [ ] Claude Desktop MCP access to the Obsidian vault (`mcp-obsidian` + Local REST API plugin) — config + plugin verified independently 2026-07-19, but Claude Desktop still isn't seeing the vault after a restart; root cause not yet diagnosed, deferred to next session — see [Docs/Obsidian.md](Docs/Obsidian.md)
 
 ## Planned
 
@@ -199,7 +204,9 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [x] MCP fundamentals (run existing community MCP servers) — n8n-mcp adopted 2026-07-18
 - [ ] Proxmox + TrueNAS MCP tools (Uptime Kuma tool already built)
 - [ ] Custom AI agents (e.g. via the Claude Agent SDK) operating against homelab services
+- [ ] Hermes Agent (self-hosted Discord IT-admin agent via Ollama, homelab troubleshooting + career-goal learning) — see [Docs/AI.md](Docs/AI.md)
 - [ ] HashiCorp Vault (machine/app secrets — Docker deploy, KV engine, policies, AppRole) — see [Docs/Security.md](Docs/Security.md)
+- [ ] Homelable (network visual mapping/monitoring, nmap discovery + live health status — [github.com/Pouzor/homelable](https://github.com/Pouzor/homelable))
 
 ---
 

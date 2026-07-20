@@ -1,0 +1,17 @@
+#!/bin/sh
+# Mirrors README.md and Docs/*.md into the Obsidian vault after every commit
+# so the vault stays a live reflection of the repo's documentation.
+# Vault: S:\Obsidian\Dupontke\Homelab\Repo-Docs (S: -> \\192.168.1.40\documents)
+# Enable with: git config core.hooksPath .githooks
+
+VAULT="//192.168.1.40/documents/Obsidian/Dupontke/Homelab/Repo-Docs"
+
+if [ ! -d "$VAULT" ]; then
+  echo "post-commit: Obsidian vault not reachable at $VAULT, skipping mirror" >&2
+  exit 0
+fi
+
+mkdir -p "$VAULT/Docs"
+cp "README.md" "$VAULT/README.md"
+cp Docs/*.md "$VAULT/Docs/"
+echo "post-commit: mirrored README.md + Docs/*.md to Obsidian vault"

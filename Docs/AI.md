@@ -84,6 +84,8 @@ Status: built, iterated through several real bugs, and functional — job search
 - Build agents (e.g. via the Claude Agent SDK) that operate against homelab services — not just answering questions, but taking action (restarting a container, creating a VM, responding to an alert)
 - This is the furthest-out item and depends on the MCP server work above existing first, since agents need tools to call
 
+**Added to roadmap (2026-07-19): Hermes Agent as a Discord IT-admin bot.** [Hermes Agent](https://hermes-agent.nousresearch.com/) (Nous Research) — a self-improving, self-hosted agent (cross-session memory, self-authored skills, cron tasks, messaging-platform gateway) that runs entirely on local hardware via Ollama, no API keys/cloud dependency. Goal: run it against this homelab's own MCP tools (Uptime Kuma today, Proxmox/TrueNAS later) as a Discord-facing "IT admin" — chat with it to check homelab health, troubleshoot issues, and get explanations that build toward [[user-career-goals]]. Depends on the Local AI foundation (Ollama + RTX 4000, item 1 above) being built first, since Hermes needs a local model to run against. Not yet started.
+
 ## Open questions to resolve when this phase starts
 
 - Where does this run — a new dedicated VM, or added to `automation01`?
