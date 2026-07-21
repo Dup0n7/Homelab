@@ -8,7 +8,6 @@
 | Second SSD | 512GB | SanDisk SD7SN6S512G (M.2 SATA, same model as boot) | `ssd2-thin` LVM-Thin pool — extra VM disk storage |
 | Data HDD 1 | 4TB | WD Red WD40EFRX (CMR, NAS-rated) | `tank` mirror member, passed through to `truenas01` |
 | Data HDD 2 | 4TB | HGST Ultrastar HUS726040ALE610 (enterprise-class, CMR) | `tank` mirror member, passed through to `truenas01` |
-| Backup HDD | 2TB | NAS-rated (model TBD) | **Not currently detected/connected** — see Lessons Learned |
 
 Both 4TB drives are passed through to the `truenas01` VM as individual disks (`/dev/disk/by-id/...`), not a whole controller — the boot SSD shares the same SATA controller, so full controller passthrough wasn't an option on this hardware. The two drives are different models/brands (WD Red + HGST Ultrastar) — ZFS mirrors don't require matching drives, only adequate capacity, so this is a fine pairing.
 
@@ -36,10 +35,13 @@ Not yet implemented. Per the original plan: Proxmox's native snapshots/backups f
 
 ## Open items
 
-- 2TB backup drive needs to be physically reconnected/verified before it can serve as a backup target.
 - Lock down the NFS export to `plex01`'s IP specifically (still allowing the whole `/24` today).
 
 ## Decisions
+
+### 2TB backup drive — dropped (2026-07-21)
+
+No longer part of the plan — it was never successfully reconnected/detected (see Lessons Learned, first flagged 2026-07-14), and it's no longer needed. Backups are still deferred per the original plan (Proxmox native snapshots/backups first, PBS once the lab is large enough).
 
 ### NVMe / cache device — evaluated, declined (2026-07-17)
 

@@ -42,7 +42,6 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 | Boot Drive | 512 GB SSD |
 | Second SSD | 512 GB SSD (M.2 SATA) — `ssd2-thin` LVM-Thin pool |
 | Storage | 2x 4 TB NAS HDD (WD Red + HGST Ultrastar) — mirrored ZFS pool on truenas01 |
-| Backup | 2 TB NAS HDD |
 
 ---
 
@@ -112,7 +111,6 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 - `tank` pool (truenas01) — **mirrored** (WD Red 4TB + HGST Ultrastar 4TB), resilvered cleanly 2026-07-15
 - `ssd2-thin` pool (Proxmox, second SSD) — extra VM disk storage / room for more VMs
 - `tank/media` dataset — exported via NFS (plex01) and SMB (Windows access)
-- 2 TB backup drive — not currently detected/connected, needs follow-up
 
 ## Future
 
@@ -181,13 +179,13 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 
 ## In Progress
 
-- [ ] Migrating existing media library onto TrueNAS
-- [ ] Reconnecting/verifying the 2TB backup drive
+- [x] Migrating existing media library onto TrueNAS — complete 2026-07-21
+- [x] `/uptime-status` slash command confirmed working 2026-07-21 (was previously "added but not verified")
+- [x] Proxmox internet speed confirmed 2026-07-21 — earlier "slow" reading was a tooling artifact (single-threaded `speedtest-cli` + a distant test server), the real Ookla CLI showed ~4974/5058 Mbps, matching an apparent ~5-Gig AT&T Fiber plan. See [Docs/Network.md](Docs/Network.md).
 - [ ] Uptime Kuma → n8n → Discord outage alerting — design explored, not yet built (see LessonsLearned "Deferred")
 - [x] First custom MCP server (`homelab-uptime-kuma`) — built, deployed, running on automation01, and confirmed connected via `/mcp` (see [Docs/AI.md](Docs/AI.md))
 - [x] n8n-mcp community MCP server (`mcp-n8n`) — deployed to automation01 and confirmed connected via `/mcp` (see [Docs/AI.md](Docs/AI.md))
 - [x] n8n-skills (14 skills + router skill) installed to `~/.claude/skills/`
-- [ ] `/uptime-status` slash command (`.claude/commands/uptime-status.md`) — lists every Uptime Kuma-monitored service and its status via the `homelab-uptime-kuma` MCP tool; added but not yet verified working (custom commands load at session start, same as MCP servers)
 - [x] First real n8n workflow built via `n8n-mcp`: `Daily Job & Learning Digest` (2026-07-18) — daily Discord message combining job postings (JSearch/RapidAPI), YouTube learning picks, and top-5 news across Hacker News/Bleeping Computer/Wired/TLDR/Reddit. See [Docs/AI.md](Docs/AI.md).
 - [x] Obsidian vault publishing started (2026-07-19) — `Homelab/Repo-Docs` mirrored from this repo's `README.md`/`Docs/*.md` via a tracked git post-commit hook (`.githooks/post-commit`); see [Docs/Obsidian.md](Docs/Obsidian.md)
 - [ ] Claude Desktop MCP access to the Obsidian vault (`mcp-obsidian` + Local REST API plugin) — config + plugin verified independently 2026-07-19, but Claude Desktop still isn't seeing the vault after a restart; root cause not yet diagnosed, deferred to next session — see [Docs/Obsidian.md](Docs/Obsidian.md)

@@ -106,3 +106,17 @@
 - Built entirely through `n8n-mcp` tool calls (`search_nodes`, `get_node`, `n8n_create_workflow`, `n8n_update_partial_workflow`, `validate_workflow`, `n8n_executions`) rather than the n8n UI — the first time the workflow-management half of the toolchain was exercised end-to-end, not just docs/node lookups.
 - n8n's public API cannot externally trigger a Schedule Trigger workflow — only webhook/form/chat triggers can be invoked via `n8n_test_workflow`. Testing a scheduled workflow requires clicking **Test workflow** in the n8n editor itself, then inspecting the resulting run via `n8n_executions` (list, then get by id with `mode: "error"` to see the exact failing node/payload).
 - Full workflow detail in [AI.md](AI.md).
+
+## 2026-07-21
+
+### Several open items closed out
+- **Media library migration to TrueNAS: complete.** All media files copied over to `tank/media` on `truenas01`.
+- **`/uptime-status` slash command: confirmed working.** Was added 2026-07-18 but unverified since custom commands only load at session start; now confirmed end-to-end.
+- **2TB backup drive: dropped from the plan, not just deferred.** It was never successfully detected/reconnected since first flagged 2026-07-14 (see that date's entry above), and it's no longer needed — removed from Storage.md/README rather than left as a perpetual "needs follow-up" item. Decision recorded in [Storage.md](Storage.md) "Decisions."
+
+### `speedtest-cli` massively understates multi-gigabit link speed
+- An internet speed test run from Proxmox over SSH (`speedtest-cli`, the Python tool) returned only 850 Mbps down / 274 Mbps up — alarming next to a PC on the same LAN's 2.5G switch port getting 2357/2337 Mbps, especially since Proxmox sits on the faster 10G switch port.
+- Root cause was entirely tooling, not the network: `speedtest-cli` uses a single TCP connection, which is bandwidth-delay-product limited — throughput per stream drops sharply as latency rises, and it had picked a distant test server (~81ms RTT) on top of that. Neither issue is visible from the tool's output unless you notice the server it picked.
+- A second gotcha compounded it: the official Ookla apt-repo install script (`packagecloud.io/.../script.deb.sh`) failed with a 404 because its OS detection doesn't yet recognize Proxmox's Debian 13 ("trixie") base — but the script's failure was easy to miss, and `speedtest` still ran afterward using the pre-existing Python `speedtest-cli`, silently masking that the "real" Ookla CLI was never actually installed.
+- Fix: download the Ookla CLI's static binary directly from `install.speedtest.net` rather than relying on the repo script (`curl -LO https://install.speedtest.net/app/cli/ookla-speedtest-<version>-linux-x86_64.tgz`, extract, run). Re-running against a nearby server gave 4974 Mbps down / 5058 Mbps up, 0% loss — consistent with a ~5-Gig AT&T Fiber plan and confirming there was never a real network problem.
+- **General lesson: for any link expected to exceed ~1 Gbps, use a multi-connection tool (the real Ookla CLI, `iperf3` with `-P`) — single-stream Python `speedtest-cli` will report numbers well below the true link capacity and can look like a false alarm.** Full detail in [Network.md](Network.md).
