@@ -6,7 +6,7 @@ This repository documents my self-hosted infrastructure for building, testing, a
 
 The lab is designed to mirror production environments as closely as possible while remaining cost effective for home use.
 
-See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, [Docs/Security.md](Docs/Security.md) for the credential/secrets management plan, [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way, and [Docs/Commands.md](Docs/Commands.md) for a running cheat sheet of commonly used commands.
+See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, [Docs/Security.md](Docs/Security.md) for the credential/secrets management plan, [Docs/Terraform.md](Docs/Terraform.md) for the IaC provisioning plan, [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way, and [Docs/Commands.md](Docs/Commands.md) for a running cheat sheet of commonly used commands.
 
 ---
 
@@ -88,11 +88,11 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 
 ## Planned
 
+- PostgreSQL — bumped up 2026-07-21, closes a real SQL skill gap for IAM/platform roles, see [Learning Progress](#learning-progress) below
 - Grafana
 - Prometheus
 - Loki
 - Alloy
-- PostgreSQL
 - Redis
 - Nextcloud
 - Immich
@@ -134,9 +134,10 @@ Planned
 
 # Automation
 
+- Terraform — automation01 imported and under Terraform management 2026-07-22, see [Docs/Terraform.md](Docs/Terraform.md)
+
 Planned
 
-- Terraform
 - Ansible
 - GitHub Actions
 - Docker Compose
@@ -193,8 +194,9 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 ## Planned
 
 - [ ] Grafana / Prometheus / Loki monitoring stack
-- [ ] Terraform
+- [x] Terraform — provider (`bpg/proxmox`); full lifecycle proven on a disposable test VM (`tf-test01`: applied, SSH-verified, destroyed cleanly); then **`automation01` (real VM: n8n/Portainer/Uptime Kuma) imported into Terraform state 2026-07-22** — see [Docs/Terraform.md](Docs/Terraform.md) for the full permission/import gotchas and what "Terraform-managed" now means for that VM. Next: Ansible.
 - [ ] Ansible
+- [ ] PostgreSQL — priority bumped up 2026-07-21 (was a generic "someday" item, wasn't even in the original target skill list despite being a real day-2 IAM/platform skill — audit-log querying, backend troubleshooting). Natural first real Ansible target: deploy it via a playbook once the Terraform `tf-test01` exercise is done, then actually connect and query it, not just stand up the container.
 - [ ] Kubernetes
 - [ ] Windows Server (dc01) / AD
 - [ ] AI Stack (Ollama / Open WebUI via RTX 4000)
