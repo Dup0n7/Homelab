@@ -6,7 +6,7 @@ This repository documents my self-hosted infrastructure for building, testing, a
 
 The lab is designed to mirror production environments as closely as possible while remaining cost effective for home use.
 
-See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, [Docs/Security.md](Docs/Security.md) for the credential/secrets management plan, [Docs/Terraform.md](Docs/Terraform.md) for the IaC provisioning plan, [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way, and [Docs/Commands.md](Docs/Commands.md) for a running cheat sheet of commonly used commands.
+See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, [Docs/Security.md](Docs/Security.md) for the credential/secrets management plan, [Docs/Terraform.md](Docs/Terraform.md) for the IaC provisioning plan, [Docs/Portfolio.md](Docs/Portfolio.md) for the public portfolio website plan, [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way, and [Docs/Commands.md](Docs/Commands.md) for a running cheat sheet of commonly used commands.
 
 ---
 
@@ -101,6 +101,8 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 - Ollama
 - Homelable (network visual mapping — [github.com/Pouzor/homelable](https://github.com/Pouzor/homelable))
 - Hermes Agent (self-hosted Discord IT-admin agent, via Ollama — see [Docs/AI.md](Docs/AI.md))
+- MCP Gateway (Docker MCP Gateway) — fronts `homelab-uptime-kuma` + `n8n-mcp` (and future MCP servers) behind one authenticated proxy, see [Docs/AI.md](Docs/AI.md)
+- Public-facing custom MCP server — internet-exposed, e.g. a Zendesk ticketing MCP, see [Docs/AI.md](Docs/AI.md)
 
 ---
 
@@ -209,6 +211,9 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [ ] Hermes Agent (self-hosted Discord IT-admin agent via Ollama, homelab troubleshooting + career-goal learning) — see [Docs/AI.md](Docs/AI.md)
 - [ ] HashiCorp Vault (machine/app secrets — Docker deploy, KV engine, policies, AppRole) — see [Docs/Security.md](Docs/Security.md)
 - [ ] Homelable (network visual mapping/monitoring, nmap discovery + live health status — [github.com/Pouzor/homelable](https://github.com/Pouzor/homelable))
+- [ ] MCP Gateway (Docker MCP Gateway) — evaluated 2026-07-18, deferred past ~5 servers; now formally tracked here per user request 2026-07-23 — see [Docs/AI.md](Docs/AI.md)
+- [ ] Public-facing custom MCP server (internet-exposed, e.g. Zendesk ticketing) — idea captured 2026-07-23, depends on Reverse Proxy/SSL work above — see [Docs/AI.md](Docs/AI.md)
+- [ ] Public portfolio/career website — idea captured 2026-07-23, not started — see [Docs/Portfolio.md](Docs/Portfolio.md)
 
 ---
 
@@ -221,6 +226,8 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - SSO Integration
 - AI Automation
 - Backup Automation
+- Public-facing custom MCP server (internet-exposed) — see [Docs/AI.md](Docs/AI.md)
+- Public portfolio/career website — see [Docs/Portfolio.md](Docs/Portfolio.md)
 
 ---
 
