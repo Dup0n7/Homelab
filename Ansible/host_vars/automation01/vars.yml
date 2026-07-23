@@ -1,0 +1,4 @@
+postgres_user: postgres
+postgres_db: postgres
+postgres_compose_dir: /home/kyle/homelab/Docker/Postgres
+postgres_nfs_mount: /mnt/postgres

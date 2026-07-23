@@ -85,10 +85,10 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 - Plex (plex01)
 - mcp-n8n (automation01) — community MCP server giving Claude Code n8n node/workflow knowledge, see [Docs/AI.md](Docs/AI.md)
 - Obsidian (testing) — vault at `S:\Obsidian\Dupontke`, `Homelab/Repo-Docs` auto-mirrored from this repo via git post-commit hook, see [Docs/Obsidian.md](Docs/Obsidian.md)
+- PostgreSQL (automation01) — v17, deployed via the first real Ansible playbook 2026-07-23, see [Docs/Ansible.md](Docs/Ansible.md)
 
 ## Planned
 
-- PostgreSQL — bumped up 2026-07-21, closes a real SQL skill gap for IAM/platform roles, see [Learning Progress](#learning-progress) below
 - Grafana
 - Prometheus
 - Loki
@@ -111,6 +111,7 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 - `tank` pool (truenas01) — **mirrored** (WD Red 4TB + HGST Ultrastar 4TB), resilvered cleanly 2026-07-15
 - `ssd2-thin` pool (Proxmox, second SSD) — extra VM disk storage / room for more VMs
 - `tank/media` dataset — exported via NFS (plex01) and SMB (Windows access)
+- `tank/postgres` dataset — exported via NFS (automation01 only, `192.168.1.20/32`), backs the PostgreSQL container's data directory instead of local disk, see [Docs/Ansible.md](Docs/Ansible.md)
 
 ## Future
 
@@ -135,10 +136,10 @@ Planned
 # Automation
 
 - Terraform — automation01 imported and under Terraform management 2026-07-22, see [Docs/Terraform.md](Docs/Terraform.md)
+- Ansible — first playbook applied 2026-07-23 (PostgreSQL deployment, running from automation01), see [Docs/Ansible.md](Docs/Ansible.md)
 
 Planned
 
-- Ansible
 - GitHub Actions
 - Docker Compose
 
@@ -194,9 +195,9 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 ## Planned
 
 - [ ] Grafana / Prometheus / Loki monitoring stack
-- [x] Terraform — provider (`bpg/proxmox`); full lifecycle proven on a disposable test VM (`tf-test01`: applied, SSH-verified, destroyed cleanly); then **`automation01` (real VM: n8n/Portainer/Uptime Kuma) imported into Terraform state 2026-07-22** — see [Docs/Terraform.md](Docs/Terraform.md) for the full permission/import gotchas and what "Terraform-managed" now means for that VM. Next: Ansible.
-- [ ] Ansible
-- [ ] PostgreSQL — priority bumped up 2026-07-21 (was a generic "someday" item, wasn't even in the original target skill list despite being a real day-2 IAM/platform skill — audit-log querying, backend troubleshooting). Natural first real Ansible target: deploy it via a playbook once the Terraform `tf-test01` exercise is done, then actually connect and query it, not just stand up the container.
+- [x] Terraform — provider (`bpg/proxmox`); full lifecycle proven on a disposable test VM (`tf-test01`: applied, SSH-verified, destroyed cleanly); then **`automation01` imported into Terraform state 2026-07-22** — see [Docs/Terraform.md](Docs/Terraform.md) for the full permission/import gotchas and what "Terraform-managed" now means for that VM. `plex01` is planned (`plex01.tf` written, clean `plan` reviewed) but not yet applied.
+- [x] Ansible — runs from `automation01` (control node can't be Windows natively — see [Docs/Ansible.md](Docs/Ansible.md)); first playbook applied 2026-07-23, secrets handled via Ansible Vault, not a plaintext `.env`.
+- [x] PostgreSQL — deployed via that first Ansible playbook 2026-07-23 (v17, `automation01`), connected to and queried for real (not just a healthy-looking container) — see [Docs/Ansible.md](Docs/Ansible.md).
 - [ ] Kubernetes
 - [ ] Windows Server (dc01) / AD
 - [ ] AI Stack (Ollama / Open WebUI via RTX 4000)

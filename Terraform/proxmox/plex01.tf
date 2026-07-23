@@ -1,20 +1,16 @@
-# Imported from the real, already-running automation01 VM (VMID 101) on
-# 2026-07-22 via `terraform plan -generate-config-out` against live Proxmox
-# state, then hand-cleaned (removed an invalid `cpu.units = 0` the schema
-# rejects, and a deprecated `network_device.enabled` attribute). See
-# Docs/Terraform.md for the full import exercise and what to watch for.
-#
-# The `import` block below is a one-time instruction — safe to leave in
-# permanently (idempotent once state matches), but the goal from here is a
-# `terraform plan` that shows zero changes, proving this resource block
-# actually matches reality.
+# Imported from the real, already-running plex01 VM (VMID 102) on 2026-07-23
+# via `terraform plan -generate-config-out` against live Proxmox state, then
+# hand-cleaned the same way as automation01.tf: removed invalid
+# `cpu.units = 0`, removed `mac_addresses` (Computed, live-agent-reported —
+# see automation01.tf's history for why that's unsafe to pin), and resolved
+# `operating_system.type` (Computed field, always shows a diff otherwise).
 
 import {
-  to = proxmox_virtual_environment_vm.automation01
-  id = "pve/101"
+  to = proxmox_virtual_environment_vm.plex01
+  id = "pve/102"
 }
 
-resource "proxmox_virtual_environment_vm" "automation01" {
+resource "proxmox_virtual_environment_vm" "plex01" {
   acpi                                 = true
   bios                                 = "seabios"
   boot_order                           = ["scsi0"]
@@ -25,7 +21,7 @@ resource "proxmox_virtual_environment_vm" "automation01" {
   kvm_arguments                        = null
   machine                              = null
   migrate                              = false
-  name                                 = "automation01"
+  name                                 = "plex01"
   node_name                            = "pve"
   on_boot                              = true
   pool_id                              = null
@@ -37,7 +33,7 @@ resource "proxmox_virtual_environment_vm" "automation01" {
   started                              = true
   stop_on_destroy                      = false
   tablet_device                        = true
-  tags                                 = ["terraform-managed"]
+  tags                                 = []
   template                             = false
   timeout_clone                        = 1800
   timeout_create                       = 1800
@@ -46,14 +42,14 @@ resource "proxmox_virtual_environment_vm" "automation01" {
   timeout_shutdown_vm                  = 1800
   timeout_start_vm                     = 1800
   timeout_stop_vm                      = 300
-  vm_id                                = 101
+  vm_id                                = 102
 
   network_device = [{
     bridge       = "vmbr0"
     disconnected = false
     enabled      = true
     firewall     = false
-    mac_address  = "BC:24:11:55:64:51"
+    mac_address  = "BC:24:11:B1:47:48"
     model        = "virtio"
     mtu          = 0
     queues       = 0
@@ -72,7 +68,7 @@ resource "proxmox_virtual_environment_vm" "automation01" {
   cpu {
     affinity     = null
     architecture = null
-    cores        = 4
+    cores        = 2
     flags        = []
     hotplugged   = 0
     limit        = 0
@@ -92,11 +88,11 @@ resource "proxmox_virtual_environment_vm" "automation01" {
     import_from       = null
     interface         = "scsi0"
     iothread          = false
-    path_in_datastore = "vm-101-disk-0"
+    path_in_datastore = "vm-102-disk-0"
     queues            = 0
     replicate         = true
     serial            = null
-    size              = 80
+    size              = 40
     ssd               = false
   }
 
@@ -107,7 +103,7 @@ resource "proxmox_virtual_environment_vm" "automation01" {
 
     ip_config {
       ipv4 {
-        address = "192.168.1.20/24"
+        address = "192.168.1.50/24"
         gateway = "192.168.1.254"
       }
     }
@@ -120,7 +116,7 @@ resource "proxmox_virtual_environment_vm" "automation01" {
   }
 
   memory {
-    dedicated      = 8192
+    dedicated      = 4096
     floating       = 0
     hugepages      = null
     keep_hugepages = false
@@ -137,7 +133,7 @@ resource "proxmox_virtual_environment_vm" "automation01" {
 
   startup {
     down_delay = -1
-    order      = 2
+    order      = 3
     up_delay   = -1
   }
 
