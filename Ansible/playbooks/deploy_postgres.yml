@@ -5,7 +5,8 @@
 # hand. Data lives on truenas01 (tank/postgres, NFS-mounted) rather than a
 # local Docker volume - same pattern as plex01's media mount. See
 # Docs/Ansible.md for the full walkthrough and why Postgres was chosen as
-# the first target.
+# the first target. Auto-run on every push to main touching Ansible/** via
+# .github/workflows/deploy-ansible.yml (self-hosted runner on automation01).
 - name: Deploy PostgreSQL on automation01
   hosts: automation01
   become: false
