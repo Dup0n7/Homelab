@@ -18,7 +18,7 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 - Learn Kubernetes (K3s)
 - Build enterprise monitoring with Grafana
 - Host a TrueNAS storage server
-- Practice Windows Server & Active Directory
+- Playground for Windows Server & Active Directory
 - Learn GitHub Actions CI/CD
 - Experiment with local AI using an RTX 4000 GPU
 - Learn the Model Context Protocol (MCP) and build a custom MCP server exposing this homelab's infrastructure to AI agents
@@ -137,10 +137,10 @@ Planned
 
 - Terraform — automation01 imported and under Terraform management 2026-07-22, see [Docs/Terraform.md](Docs/Terraform.md)
 - Ansible — first playbook applied 2026-07-23 (PostgreSQL deployment, running from automation01), see [Docs/Ansible.md](Docs/Ansible.md)
+- GitHub Actions — self-hosted runner on automation01 auto-deploys Ansible playbooks on push to `main`, 2026-07-23, see [Docs/Ansible.md](Docs/Ansible.md)
 
 Planned
 
-- GitHub Actions
 - Docker Compose
 
 ---
@@ -198,6 +198,7 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [x] Terraform — provider (`bpg/proxmox`); full lifecycle proven on a disposable test VM (`tf-test01`: applied, SSH-verified, destroyed cleanly); then **`automation01` imported into Terraform state 2026-07-22** — see [Docs/Terraform.md](Docs/Terraform.md) for the full permission/import gotchas and what "Terraform-managed" now means for that VM. `plex01` is planned (`plex01.tf` written, clean `plan` reviewed) but not yet applied.
 - [x] Ansible — runs from `automation01` (control node can't be Windows natively — see [Docs/Ansible.md](Docs/Ansible.md)); first playbook applied 2026-07-23, secrets handled via Ansible Vault, not a plaintext `.env`.
 - [x] PostgreSQL — deployed via that first Ansible playbook 2026-07-23 (v17, `automation01`), connected to and queried for real (not just a healthy-looking container) — see [Docs/Ansible.md](Docs/Ansible.md).
+- [x] GitHub Actions — self-hosted runner on `automation01` (systemd service), auto-runs Ansible playbooks on push to `main`; push-trigger-only to stay safe on a public repo — see [Docs/Ansible.md](Docs/Ansible.md).
 - [ ] Kubernetes
 - [ ] Windows Server (dc01) / AD
 - [ ] AI Stack (Ollama / Open WebUI via RTX 4000)
@@ -213,7 +214,6 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 
 # Future Projects
 
-- GitHub Runner
 - Reverse Proxy
 - SSL Certificates
 - Internal DNS
@@ -243,7 +243,7 @@ homelab/
 
 # Technologies
 
-- Proxmox
+- Proxmox (Self hosted sandbox to imitate Azure, GCP, AWS)
 - Ubuntu Server
 - Docker
 - Docker Compose

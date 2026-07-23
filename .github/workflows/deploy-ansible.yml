@@ -1,0 +1,26 @@
+name: Deploy Ansible
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Ansible/**"
+  workflow_dispatch:
+
+jobs:
+  deploy-postgres:
+    # Self-hosted runner living on automation01 itself — Ansible's control
+    # node has to be Linux/macOS/WSL (see Docs/Ansible.md), and this reuses
+    # the existing vault password file already on disk there rather than
+    # duplicating it as a GitHub secret.
+    runs-on: [self-hosted, automation01]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run deploy_postgres playbook
+        working-directory: Ansible
+        run: >
+          ansible-playbook playbooks/deploy_postgres.yml
+          --vault-password-file /home/kyle/homelab/Ansible/.vault_pass

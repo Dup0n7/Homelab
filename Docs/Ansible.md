@@ -58,11 +58,25 @@ Verified end-to-end, not just "container exists": connected via `docker exec pos
 
 ## Running it
 
-From `automation01` (SSH in, or however you're driving it):
+Manually, from `automation01` (SSH in, or however you're driving it):
 ```bash
 cd ~/homelab/Ansible
 ansible-playbook playbooks/deploy_postgres.yml --vault-password-file .vault_pass
 ```
+
+Or automatically — see below.
+
+## Automatic deploys via GitHub Actions
+
+**Status: wired up 2026-07-23.** [`.github/workflows/deploy-ansible.yml`](../.github/workflows/deploy-ansible.yml) runs `deploy_postgres.yml` on every push to `main` that touches `Ansible/**` (plus a manual `workflow_dispatch` trigger).
+
+**Runner: self-hosted on automation01 itself, not a GitHub-hosted runner.** Two reasons:
+- automation01 is the Ansible control node already (see above) — a hosted runner has no route into the homelab LAN without a VPN/tunnel.
+- The workflow reuses the vault password file that's already on disk at `/home/kyle/homelab/Ansible/.vault_pass` (`--vault-password-file` points at that absolute path directly), rather than duplicating the vault secret into GitHub Actions secrets. Same "the key that unlocks the vault never leaves automation01" principle as the manual-run setup.
+
+Installed as a systemd service (`actions-runner/svc.sh install kyle` → `actions.runner.Dup0n7-Homelab.automation01.service`, enabled + running), so it survives reboots and doesn't need a logged-in session.
+
+**Security note — this repo is public.** Registering a self-hosted runner on a public repo triggers a GitHub warning: a fork's pull request could otherwise get arbitrary code executed on the runner (which runs as `kyle`, who has `sudo`/`docker` group membership and LAN access). Mitigated by keeping the trigger to `push: branches: [main]` only — **never add a `pull_request` or `pull_request_target` trigger to any workflow that targets this runner**, since a fork PR can't push to `main` and there are no other collaborators on this repo. If that ever changes (a collaborator gets push access, or a PR-triggered workflow gets added), this needs re-hardening — e.g. a dedicated low-privilege service account instead of `kyle`, off the `sudo`/`docker` groups.
 
 ## Open questions / next steps
 
