@@ -8,11 +8,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy-postgres:
+  deploy:
     # Self-hosted runner living on automation01 itself — Ansible's control
     # node has to be Linux/macOS/WSL (see Docs/Ansible.md), and this reuses
     # the existing vault password file already on disk there rather than
-    # duplicating it as a GitHub secret.
+    # duplicating it as a GitHub secret. automation01 also holds the
+    # dedicated Ansible SSH key used to reach plex01.
     runs-on: [self-hosted, automation01]
 
     steps:
@@ -24,3 +25,7 @@ jobs:
         run: >
           ansible-playbook playbooks/deploy_postgres.yml
           --vault-password-file /home/kyle/homelab/Ansible/.vault_pass
+
+      - name: Run deploy_plex playbook
+        working-directory: Ansible
+        run: ansible-playbook playbooks/deploy_plex.yml

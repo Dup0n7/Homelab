@@ -4,7 +4,7 @@
 
 Second step of the "Infrastructure as Code" phase (Terraform provisions → **Ansible configures** → Kubernetes orchestrates — see [Terraform.md](Terraform.md)). Also directly job-market relevant, same reasoning as Terraform/Vault: Ansible is a core platform/IAM-engineering skill, and it's specifically strong in exactly the kind of on-prem/config-management work this lab targets.
 
-Status: **First playbook applied and verified 2026-07-23** — PostgreSQL deployed on `automation01`, storing its data on `truenas01` (NFS) rather than local disk, connected to and queried for real (`PostgreSQL 17.10`).
+Status: **First playbook applied and verified 2026-07-23** — PostgreSQL deployed on `automation01`, storing its data on `truenas01` (NFS) rather than local disk, connected to and queried for real (`PostgreSQL 17.10`). **Widened to a second, cross-host target same day** — `plex01` brought under management over real SSH (see "Cross-host management" below).
 
 ## Where Ansible runs: automation01, not the Windows workstation
 
@@ -16,9 +16,22 @@ Unlike Terraform (a self-contained Go binary with a native Windows build), **Ans
 
 Installed via `sudo apt-get install -y ansible` → `ansible [core 2.16.3]` (Ubuntu 24.04's package).
 
-## Inventory: automation01 only, for now
+## Inventory: automation01 (local) + plex01 (SSH)
 
-[`Ansible/inventory.ini`](../Ansible/inventory.ini) has a single host, `automation01`, using `ansible_connection=local` — Ansible manages the very host it's running on directly, no SSH involved. This isn't a limitation of the exercise, it's a real gap: **`automation01` has no SSH keypair of its own** (checked directly — only an `authorized_keys` file for accepting incoming connections from the Windows workstation). Managing `plex01` or `truenas01` from here would need a keypair generated on `automation01` and added to those hosts' `authorized_keys` first. Not yet done — see "Open questions."
+[`Ansible/inventory.ini`](../Ansible/inventory.ini) has two hosts in `docker_hosts`: `automation01` (`ansible_connection=local` — manages the host it's running on directly) and `plex01` (real SSH, `192.168.1.50`).
+
+## Cross-host management: a dedicated SSH keypair for automation01
+
+`automation01` previously had **no SSH keypair of its own** — only an `authorized_keys` file for accepting incoming connections from the Windows workstation, which is a one-way door and useless for automation01 to reach *other* hosts. Fixed by generating a keypair dedicated to Ansible rather than reusing anything else:
+
+```bash
+# On automation01
+ssh-keygen -t ed25519 -f ~/.ssh/ansible_ed25519 -N '' -C 'automation01-ansible-control'
+```
+
+No passphrase — matches how every other key-based auth path in this lab already works unattended (Ansible itself, the GitHub Actions runner), and it's scoped down anyway (`kyle`'s normal permissions on the target, nothing broader). The public key was appended to `plex01`'s `~/.ssh/authorized_keys` (not overwritten — that file already had the Windows workstation's key), and `inventory.ini` points at it explicitly via `ansible_ssh_private_key_file` rather than relying on default key discovery, so it's obvious from the inventory alone which key Ansible uses.
+
+`truenas01` is not part of this yet — see "Open questions."
 
 ## Secrets: Ansible Vault, not a plaintext `.env`
 
@@ -56,6 +69,14 @@ Verified end-to-end, not just "container exists": connected via `docker exec pos
 
 **One-time migration note**: since Postgres had already been deployed once with a local named volume before this storage move, switching required a one-time `docker compose down -v` to discard the old local volume (safe — nothing but default/empty test databases were ever in it) before re-running the playbook against the new NFS-backed config. This teardown step was **not** added to the playbook itself — baking in "delete the old volume" as a normal, repeatable task would be dangerous once real data exists.
 
+## Second playbook: deploy_plex.yml
+
+[`Ansible/playbooks/deploy_plex.yml`](../Ansible/playbooks/deploy_plex.yml) — same shape as `deploy_postgres.yml` (confirm Docker, ensure the NFS mount, `docker compose up -d`), applied against `plex01`'s existing Plex + Portainer Agent stack ([`Docker/Media/docker-compose.yml`](../Docker/Media/docker-compose.yml)). Two differences from the Postgres playbook:
+- **No Ansible Vault involved** — nothing in `Docker/Media/docker-compose.yml` needs a secret (no `.env` at all), so there's no template-rendering step.
+- **The NFS mount (`tank/media`) already existed and was already in `plex01`'s `/etc/fstab`** before this playbook was written — unlike Postgres's mount, which the playbook created from scratch. The mount tasks here are about making that state *declarative and idempotent* (Ansible verifies/enforces it every run) rather than provisioning it for the first time.
+
+First run confirmed idempotent against the live host: `docker ps` showed both containers with unchanged uptime (`Up 7 days`) after the playbook ran — nothing was recreated, Ansible just confirmed everything already matched the desired state.
+
 ## Running it
 
 Manually, from `automation01` (SSH in, or however you're driving it):
@@ -68,7 +89,7 @@ Or automatically — see below.
 
 ## Automatic deploys via GitHub Actions
 
-**Status: wired up 2026-07-23.** [`.github/workflows/deploy-ansible.yml`](../.github/workflows/deploy-ansible.yml) runs `deploy_postgres.yml` on every push to `main` that touches `Ansible/**` (plus a manual `workflow_dispatch` trigger).
+**Status: wired up 2026-07-23.** [`.github/workflows/deploy-ansible.yml`](../.github/workflows/deploy-ansible.yml) runs both `deploy_postgres.yml` and `deploy_plex.yml` (in sequence, one job) on every push to `main` that touches `Ansible/**` (plus a manual `workflow_dispatch` trigger). Both playbooks are idempotent, so running the Postgres one even when only the Plex playbook actually changed (or vice versa) is a harmless no-op rather than something worth conditionally skipping — not worth the added complexity of path-based job selection at this scale (two playbooks).
 
 **Runner: self-hosted on automation01 itself, not a GitHub-hosted runner.** Two reasons:
 - automation01 is the Ansible control node already (see above) — a hosted runner has no route into the homelab LAN without a VPN/tunnel.
@@ -100,6 +121,6 @@ Registered as a systemd service, `actions.runner.Dup0n7-Homelab.automation01.ser
 
 ## Open questions / next steps
 
-- [ ] Give `automation01` its own SSH keypair and authorize it on `plex01`/`truenas01` so the inventory can grow beyond a single local host.
+- [x] Give `automation01` its own SSH keypair and authorize it on `plex01` — done 2026-07-23, see "Cross-host management" above. `truenas01` still not authorized/added.
 - [ ] Decide whether `truenas01` should ever be Ansible-managed at all — it's usually driven through its own UI/API by design, unlike the general-purpose Docker hosts.
 - [ ] Next phase per the original order: Kubernetes (K3s), once Terraform + Ansible both feel solid.

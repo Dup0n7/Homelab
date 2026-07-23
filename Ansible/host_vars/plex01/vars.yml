@@ -1,0 +1,3 @@
+plex_compose_dir: /home/kyle/homelab/Docker/Media
+media_nfs_mount: /mnt/media
+media_nfs_src: 192.168.1.40:/mnt/tank/media
