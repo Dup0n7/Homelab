@@ -122,5 +122,5 @@ Registered as a systemd service, `actions.runner.Dup0n7-Homelab.automation01.ser
 ## Open questions / next steps
 
 - [x] Give `automation01` its own SSH keypair and authorize it on `plex01` — done 2026-07-23, see "Cross-host management" above. `truenas01` still not authorized/added.
-- [ ] Decide whether `truenas01` should ever be Ansible-managed at all — it's usually driven through its own UI/API by design, unlike the general-purpose Docker hosts.
+- [x] Decide whether `truenas01` should ever be Ansible-managed at all — **decided 2026-07-23: no.** It's a storage appliance driven through its own UI/API by design (ZFS pools, NFS/SMB exports, shares) — not a general-purpose Docker host like `automation01`/`plex01`, so there's nothing here that's actually a better fit for Ansible than TrueNAS's own tooling. `docker_hosts` in the inventory stays scoped to hosts that run Docker Compose stacks.
 - [ ] Next phase per the original order: Kubernetes (K3s), once Terraform + Ansible both feel solid.
