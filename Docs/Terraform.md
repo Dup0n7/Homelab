@@ -4,7 +4,7 @@
 
 First step of the "Infrastructure as Code" phase from the original roadmap (Terraform provisions → Ansible configures → Kubernetes orchestrates, see [AI.md](AI.md)-style layering in the main learning-progress notes). Also directly job-market relevant — Terraform/HCL is a core platform-engineering skill, same reasoning as the earlier HashiCorp Vault decision (see [Security.md](Security.md)).
 
-Status: **automation01 imported and under management 2026-07-22.** Full lifecycle now proven: created a disposable test VM from scratch (`tf-test01`, applied → SSH-verified → destroyed cleanly), then imported the real `automation01` VM into Terraform state with `terraform plan` showing only one benign cosmetic diff.
+Status: **automation01 imported and under management 2026-07-22.** Full lifecycle proven: created a disposable test VM from scratch (`tf-test01`, applied → SSH-verified → destroyed cleanly), then imported the real `automation01` VM into Terraform state with `terraform plan` showing only one benign cosmetic diff. **`plex01.tf` written and planned clean the same way — not yet applied.**
 
 ## Provider: `bpg/proxmox`
 
@@ -16,6 +16,7 @@ Chosen over the older `Telmate/proxmox` provider — more actively maintained, b
 
 - **`automation01.tf`** — the real, actively-running `automation01` VM (VMID `101`: n8n, Portainer, Uptime Kuma), imported into Terraform state 2026-07-22. Built via `terraform plan -generate-config-out`, which reads the VM's actual live config from Proxmox and writes a matching resource block automatically — far less error-prone than hand-transcribing every attribute. `terraform plan` against it now shows only one cosmetic diff (`operating_system.type`, a Computed provider field — see "Gotchas hit"), no destructive changes. **automation01 is now Terraform-managed** — see "What changes when Terraform manages a running VM" below for what that means day to day.
 - **`examples/tf-test01/`** (`main.tf` + `outputs.tf`, moved out of the active config 2026-07-22) — the disposable test VM used to learn the plan/apply/destroy cycle before touching anything real. Cloned from the Ubuntu 24.04 cloud-init template (VMID `9000`), static IP `192.168.1.21`, `kyle` cloud-init user — applied, SSH-verified, then destroyed cleanly. Kept as a reference pattern for provisioning a fresh VM from the template, but moved out of `Terraform/proxmox/`'s working directory so it doesn't get recreated on every `plan`/`apply` (Terraform only reads `.tf` files directly in the working directory, not subfolders).
+- **`plex01.tf`** — second real-VM import (VMID `102`), built the same way as automation01 (`generate-config-out` + cleanup). `terraform plan` shows the same clean pattern (1 import, 1 cosmetic `operating_system.type` change, 0 destroy) — **reviewed but not yet applied.**
 
 **Why import automation01 instead of leaving it out of Terraform entirely:** this is what "codify existing infrastructure" actually means in practice — writing a resource block that matches a real, already-running VM and importing it into state, then iterating on `terraform plan` until it shows (near-)zero changes. It's a better exercise than `tf-test01` precisely because it's less forgiving: a resource block that doesn't match reality can make `apply` try to "fix" perceived drift by modifying or recreating a VM real services depend on — which is exactly why `tf-test01` came first, to learn the mechanics somewhere with zero stakes.
 
@@ -41,7 +42,7 @@ Terraform authenticates to Proxmox via an API token, not the root password. Crea
    pveum acl modify /sdn/zones/localnetwork   --tokens 'terraform@pve!terraform' --roles PVESDNUser
    ```
 
-## Gotchas hit getting the first apply through (2026-07-22)
+## Gotchas hit (2026-07-22 – 2026-07-23)
 
 ### API tokens with Privilege Separation don't inherit the user's permissions
 Granting `PVEVMAdmin` to the plain user `terraform@pve` did nothing for the token — with Privilege Separation enabled (the default, and the right choice for least-privilege), **the token is its own principal** (`terraform@pve!terraform`) and needs its own explicit ACL grants, conceptually the same as a scoped OAuth app registration being distinct from the user who owns it. The token also **didn't show up in the Permissions page's "Add: User Permission" dropdown** — a real Proxmox UI gap — so the reliable path is the `pveum acl modify` CLI via the node's built-in Shell (no SSH setup needed, it's a browser-based root shell right in the Proxmox web UI).
@@ -55,12 +56,15 @@ Cloning a VM with a disk and a network device touches **three separate permissio
 ### Importing an existing VM: Computed fields don't converge to zero-diff no matter what you write
 Getting `automation01`'s `plan` down to zero changes wasn't fully achievable — `operating_system.type` kept showing as a diff (`+ type = "other"`) regardless of whether the config set it to `null`, `"other"`, or omitted the block entirely. Root cause: it's a Computed attribute the provider resolves to its own default at plan time rather than something reconciled against the config value — the "current state" from import genuinely has no cached value for it yet, since the import/refresh path doesn't populate every Computed field the way a full `Read` after `apply` does. **Lesson: for imports, a few single-attribute, non-destructive diffs on Computed fields are normal and not a sign the resource block is wrong** — the thing to actually scrutinize in the plan is whether anything shows as `-/+ create replacement` (destroy+recreate) or changes a hardware-affecting attribute unexpectedly; a lone `~ update in-place` on a cosmetic field like this is safe to just apply.
 
+### `mac_addresses` is a live-agent-reported Computed field — never pin it as a literal value
+The generated config for `automation01` included a hardcoded `mac_addresses` list — not just the primary NIC's MAC, but every Docker-internal interface's MAC too (`docker0`, `br-*`, `veth*`, matching `network_interface_names` from the guest agent). Docker regenerates those veth MACs whenever containers get recreated, so a second `plan` run later showed several of them as "changed" — false drift from a field that was never stable to begin with. Fix: dropped `mac_addresses` from the resource block entirely (it's Computed/observed, not something meant to be declared) — applied the same fix preemptively to `plex01.tf`, even though its generated value happened to come back empty that time. **General lesson: any live-agent-reported attribute reflecting ephemeral in-guest state (container networking, dynamic interfaces) should never be pinned as a literal value in a generated config** — check what a field actually represents before accepting whatever `-generate-config-out` wrote down.
+
 ### A destroyed resource's `.tf` file doesn't stop wanting to exist
 After `terraform destroy` on `tf-test01`, its resource block was still sitting in `main.tf` — so the very next `plan` showed "1 to add" for it again (destroy removes it from real infrastructure *and* state, but not from the declared config). Not a bug, just something to remember: once a resource's learning purpose is served, either remove it from the working directory's `.tf` files or move it somewhere Terraform won't auto-load it (moved to `examples/tf-test01/` here, since Terraform only reads `.tf` files directly in its working directory, not subfolders).
 
 ## Running it
 
-**Careful: `Terraform/proxmox/` now manages the real `automation01` VM directly**, not just a disposable test resource. `terraform plan` before `apply`, always — and check the plan for anything unexpected before approving.
+**Careful: `Terraform/proxmox/` now manages real VMs directly** (`automation01`, and `plex01.tf` is staged too), not just a disposable test resource. `terraform plan` before `apply`, always — and check the plan for anything unexpected before approving.
 
 ```bash
 cd Terraform/proxmox
@@ -75,6 +79,7 @@ To experiment with provisioning a fresh VM again without touching automation01, 
 
 - [x] `terraform destroy` on `tf-test01` — confirmed clean 2026-07-22, full create/destroy lifecycle proven.
 - [x] `terraform import` against `automation01` — complete 2026-07-22, see "Gotchas hit" below for the full trail.
+- [ ] `terraform apply` on `plex01.tf` — written and planned clean, still pending, no rush.
 - [ ] Install `qemu-guest-agent` in the template (VMID `9000`) so future clones can use DHCP + agent-based IP discovery if wanted — not required (static IP works fine without it) but the more complete fix.
 - [ ] Remote state (currently local `terraform.tfstate`, gitignored) — fine solo, but worth learning a remote backend eventually since that's standard in team environments.
-- [ ] Next phase: Ansible, starting with the prioritized PostgreSQL deployment (see README's Learning Progress).
+- [x] Ansible phase started 2026-07-23 — see [Docs/Ansible.md](Ansible.md) (PostgreSQL deployed, running from automation01, NFS-backed storage on truenas01). Next per the original order: Kubernetes (K3s), once both feel solid.
