@@ -78,6 +78,26 @@ Installed as a systemd service (`actions-runner/svc.sh install kyle` → `action
 
 **Security note — this repo is public.** Registering a self-hosted runner on a public repo triggers a GitHub warning: a fork's pull request could otherwise get arbitrary code executed on the runner (which runs as `kyle`, who has `sudo`/`docker` group membership and LAN access). Mitigated by keeping the trigger to `push: branches: [main]` only — **never add a `pull_request` or `pull_request_target` trigger to any workflow that targets this runner**, since a fork PR can't push to `main` and there are no other collaborators on this repo. If that ever changes (a collaborator gets push access, or a PR-triggered workflow gets added), this needs re-hardening — e.g. a dedicated low-privilege service account instead of `kyle`, off the `sudo`/`docker` groups.
 
+### Runner internals: where it lives, how to watch it
+
+The runner agent itself is **not part of this git repo** — `deploy-ansible.yml` only defines what runs; the agent that polls GitHub and executes it is a standalone install on `automation01` at `/home/kyle/actions-runner/`:
+
+| File | What it holds |
+|---|---|
+| `.runner` | Non-secret identity — registered to `Dup0n7/Homelab`, agent name `automation01`, pool `Default` |
+| `.credentials` / `.credentials_rsaparams` | The auth keypair the runner uses to poll GitHub, generated once at registration — never touches git |
+| `_work/Homelab/Homelab/` | Fresh checkout of the repo per job run (separate from `~/homelab`, the manually-managed checkout) |
+| `_diag/` | Per-run diagnostic logs |
+
+Registered as a systemd service, `actions.runner.Dup0n7-Homelab.automation01.service` (`/etc/systemd/system/`), running as `kyle`, `enabled` + `active`.
+
+**Watching it run:**
+- GitHub's Actions tab (`github.com/Dup0n7/Homelab/actions`) — the normal way, shows every run and step-by-step logs.
+- Runner online/idle/active status: repo **Settings → Actions → Runners**.
+- On `automation01`: `sudo journalctl -u actions.runner.Dup0n7-Homelab.automation01.service -f` (live) or `--no-pager -n 100` (history).
+
+**How it was registered** (one-time, not something a playbook or script repeats): downloaded the runner release tarball to `~/actions-runner`, ran `./config.sh --url https://github.com/Dup0n7/Homelab --token <one-time token from the GitHub UI> --unattended --name automation01 --labels automation01 --work _work`, then `sudo ./svc.sh install kyle && sudo ./svc.sh start` to wrap it as the systemd service above. The registration token is single-use and expires quickly — only needed at registration time, not stored anywhere after.
+
 ## Open questions / next steps
 
 - [ ] Give `automation01` its own SSH keypair and authorize it on `plex01`/`truenas01` so the inventory can grow beyond a single local host.
