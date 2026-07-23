@@ -91,6 +91,24 @@ Status: built, iterated through several real bugs, and functional — job search
 - Where does this run — a new dedicated VM, or added to `automation01`?
 - How much of this is safe to let an agent *act* on autonomously vs. requiring approval (this matters a lot once agents can restart services or touch TrueNAS)
 
+### 6. Public-facing custom MCP server (internet-exposed)
+
+**Idea captured 2026-07-23.** All MCP servers built so far (`homelab-uptime-kuma`, `n8n-mcp`) are LAN-only — reachable at `192.168.1.20`, never exposed past the router. This is a different, harder tier: a self-hosted MCP server reachable from the public internet, for external users/devices to call, not just Claude sessions on this LAN.
+
+Candidate ideas:
+- A **Zendesk ticketing MCP** — plays directly to the user's existing day-job Zendesk admin experience (see [[user-career-goals]]), and no well-known public Zendesk MCP server exists yet as of this writing.
+- Something else genuinely missing from the current MCP ecosystem — not yet chosen; worth a quick survey of existing public/community MCP servers before committing so this doesn't duplicate something that already exists well.
+
+This depends on infrastructure this lab hasn't built yet — internet exposure isn't safe without it:
+- **Reverse proxy + real TLS certs** (README "Future Projects" — not started)
+- **Auth on the server itself** — a bearer token like `n8n-mcp` uses today is fine LAN-only, but an internet-facing tool-calling server needs something stronger (OAuth2/API-key-per-consumer at minimum) given MCP tools can take real actions (e.g. creating/updating Zendesk tickets)
+- Some thought on rate limiting / abuse prevention, since this is no longer just "me talking to my own infra"
+
+**Open questions specific to this idea:**
+- Which idea to build (Zendesk vs. something else) — survey existing public MCP servers first
+- Reverse proxy choice (Traefik vs. Caddy — Caddy already named as a target skill in [[user-career-goals]])
+- Where credentials for the exposed service live — likely the first real consumer of Vault ([Docs/Security.md](Docs/Security.md)) rather than a `.env` file, given the stakes of exposing a credentialed tool-calling server to the internet
+
 ## Future consideration: Docker MCP Gateway
 
 Evaluated 2026-07-18. Docker MCP Gateway (`docker mcp gateway run`, part of Docker's MCP Toolkit) fronts multiple MCP servers behind one proxy endpoint — curated/signed community catalog, centralized secrets via Docker's vault instead of env files, per-client tool enable/disable, request interceptors for auth/logging.
@@ -98,3 +116,5 @@ Evaluated 2026-07-18. Docker MCP Gateway (`docker mcp gateway run`, part of Dock
 Decision: not adopting yet. At 2 servers (`homelab-uptime-kuma`, `n8n-mcp`), the current pattern — one container per server in `Docker/MCP/docker-compose.yml`, each its own port, each listed individually in `.mcp.json` — already gives hands-on practice with per-server auth (bearer tokens, env-based secrets), which is the actual point of this phase for IAM/platform engineering skill-building. The gateway would abstract that away.
 
 Revisit once the server count grows past ~5 (Proxmox/TrueNAS additions plus whatever comes after) or managing individual `.mcp.json` entries/auth becomes real toil — worth standing up and testing then, both to see if it simplifies management and as its own portfolio-relevant piece (aggregation/gateway patterns are common in IAM/platform tooling).
+
+**2026-07-23: formally added to the tracked roadmap** (README "Docker Services > Planned" and "Learning Progress > Planned") per user request — the "not adopting yet" timing decision above still stands, but it's now a real checklist item rather than a paragraph that could get lost.
