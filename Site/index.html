@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Where everything lives — Kyle's Homelab</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10161a; --panel: #1a2226; --panel-2: #151c20; --border: #2a343a;
+      --text: #e8e3d8; --text-dim: #93a0a6; --text-faint: #5f6a70;
+      --pull: #d99a4e; --pull-soft: #3a2f22; --build: #5cb0a6; --build-soft: #1c3230;
+      --alt: #9d92c9; --code-bg: #0c1114; --hub: #d99a4e;
+    }
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f3efe6; --panel: #fdfbf6; --panel-2: #eae4d6; --border: #ddd5c2;
+      --text: #201d17; --text-dim: #6b6255; --text-faint: #a49a89;
+      --pull: #a5651c; --pull-soft: #f1e0c8; --build: #237268; --build-soft: #d9ece8;
+      --alt: #5e5390; --code-bg: #ece5d5; --hub: #a5651c;
+    }
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', sans-serif;
+    line-height: 1.55;
+    padding: 3rem 1.5rem 5rem;
+  }
+  .page { max-width: 920px; margin: 0 auto; }
+
+  h1, h2, .card-name {
+    font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, ui-serif, serif;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  code, .mono, .eyebrow, .tag, .edge-label {
+    font-family: ui-monospace, 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  }
+  a { color: var(--hub); }
+
+  header { margin-bottom: 2.6rem; }
+  .top-link {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 1.4rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.25rem 0.7rem;
+  }
+  .top-link:hover { color: var(--hub); border-color: var(--hub); }
+  .eyebrow {
+    font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-dim); display: block; margin-bottom: 0.9rem;
+  }
+  h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); line-height: 1.2; margin: 0 0 0.9rem; max-width: 26ch; }
+  header p { color: var(--text-dim); max-width: 66ch; font-size: 1.02rem; margin: 0; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.3rem;
+  }
+  .card-name { font-size: 1.05rem; margin: 0 0 0.15rem; }
+  .card-sub { font-size: 0.78rem; color: var(--text-faint); margin: 0 0 0.7rem; }
+  .card ul { margin: 0; padding-left: 1.05rem; font-size: 0.88rem; color: var(--text-dim); }
+  .card li { margin: 0.2rem 0; }
+  .card li b { color: var(--text); font-weight: 600; }
+
+  .actors {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 0.4rem;
+  }
+  .actors .card { border-color: var(--text-dim); }
+
+  .edge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-faint);
+    font-size: 0.68rem;
+    padding: 0.5rem 0;
+  }
+  .edge .line { width: 1px; height: 1.4rem; background: var(--border); }
+  .edge .label {
+    text-align: center;
+    letter-spacing: 0.02em;
+    background: var(--bg);
+    padding: 0.15rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    margin: 0.3rem 0;
+    color: var(--text-dim);
+  }
+
+  .bastion {
+    background: var(--panel);
+    border: 2px solid var(--hub);
+    border-radius: 12px;
+    padding: 1.5rem 1.7rem;
+    margin: 0.2rem 0 0.6rem;
+  }
+  .bastion-head { display: flex; align-items: baseline; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.3rem; }
+  .bastion .card-name { font-size: 1.4rem; color: var(--hub); }
+  .bastion-tag {
+    font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--hub); border: 1px solid var(--hub); border-radius: 4px; padding: 0.12rem 0.4rem;
+  }
+  .bastion-ip { font-size: 0.85rem; color: var(--text-faint); margin: 0 0 1rem; }
+  .roles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.7rem;
+  }
+  .role {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 0.8rem;
+  }
+  .role .n { font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); display: block; margin-bottom: 0.3rem; }
+  .role .t { font-size: 0.85rem; color: var(--text); }
+
+  .fanout-label {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-faint);
+    margin: 0.6rem 0 1rem;
+  }
+
+  .proxmox-box {
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 1.6rem 1.3rem 1.3rem;
+    position: relative;
+    margin-top: 0.5rem;
+  }
+  .proxmox-label {
+    position: absolute;
+    top: -0.7rem;
+    left: 1.2rem;
+    background: var(--bg);
+    padding: 0 0.5rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .managed-hosts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .managed-hosts .card { display: flex; flex-direction: column; }
+  .managed-hosts .edge-label {
+    font-size: 0.66rem;
+    color: var(--text-dim);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    margin: -0.2rem 0 0.7rem;
+    display: inline-block;
+    align-self: flex-start;
+  }
+  .managed-hosts .card.dashed { border-style: dashed; border-color: var(--alt); }
+  .managed-hosts .card.dashed .edge-label { color: var(--alt); border-color: var(--alt); background: transparent; }
+
+  .github-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.6rem;
+    flex-wrap: wrap;
+  }
+  .github-row .card { flex: 1 1 240px; }
+  .github-arrow {
+    color: var(--text-faint);
+    font-size: 0.8rem;
+    text-align: center;
+    flex: 0 0 auto;
+    min-width: 140px;
+  }
+  .github-arrow .label {
+    display: block;
+    font-size: 0.68rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    margin-top: 0.3rem;
+  }
+
+  .legend {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    font-size: 0.83rem;
+    color: var(--text-dim);
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+  .legend-line { width: 1.4rem; height: 0; border-top: 1px solid var(--text-faint); }
+  .legend-line.dashed { border-top-style: dashed; border-color: var(--alt); }
+  .legend-line.solid-hub { border-top: 2px solid var(--hub); }
+
+  .closing { margin-top: 1.6rem; font-size: 1rem; max-width: 66ch; color: var(--text); }
+  .closing b { color: var(--hub); }
+
+  footer {
+    margin-top: 3.5rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+    color: var(--text-faint);
+  }
+  footer a { color: var(--text-faint); }
+  footer a:hover { color: var(--hub); }
+
+  @media (max-width: 720px) {
+    .actors { grid-template-columns: 1fr; }
+    .roles { grid-template-columns: 1fr 1fr; }
+    .managed-hosts { grid-template-columns: 1fr; }
+    .github-row { flex-direction: column; }
+    .github-arrow { min-width: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <a class="top-link" href="https://github.com/Dup0n7/Homelab">&larr; github.com/Dup0n7/Homelab</a>
+
+  <header>
+    <span class="eyebrow">Kyle's Homelab — system map</span>
+    <h1>Where everything lives, and what talks to what</h1>
+    <p>Six machines, one of which quietly became the control point for all the others. This traces every real connection built so far — what runs where, what SSHes into what, and with which key. Kept current as the lab evolves; see the <a href="https://github.com/Dup0n7/Homelab">repo</a> for the full write-up behind every decision.</p>
+  </header>
+
+  <div class="actors">
+    <div class="card">
+      <div class="card-name">Windows workstation</div>
+      <div class="card-sub">the dev machine</div>
+      <ul>
+        <li>The repo, edited locally</li>
+        <li><b>Terraform</b> runs here directly (Go binary, native Windows build)</li>
+        <li>Claude Code runs here</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-name">GitHub</div>
+      <div class="card-sub">github.com/Dup0n7/Homelab</div>
+      <ul>
+        <li>Source of truth — every change lands here via <code>git push</code></li>
+        <li>Hosts the Actions workflow definitions, and this page</li>
+        <li>Has no direct access into the lab itself</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="edge">
+    <div class="line"></div>
+    <span class="label">SSH · personal key · manual access</span>
+    <span class="label">Terraform · HTTPS API :8006 · provisions VMs</span>
+    <div class="line"></div>
+  </div>
+
+  <div class="bastion">
+    <div class="bastion-head">
+      <span class="card-name">automation01</span>
+      <span class="bastion-tag">the bastion</span>
+    </div>
+    <div class="bastion-ip"><code>192.168.1.20</code> — the one machine everything else routes through</div>
+    <div class="roles">
+      <div class="role"><span class="n">Docker host</span><span class="t">n8n, Postgres, MCP servers, Homepage</span></div>
+      <div class="role"><span class="n">Ansible control node</span><span class="t">holds <code>ansible_ed25519</code>, SSHes out to manage other hosts</span></div>
+      <div class="role"><span class="n">GitHub Actions runner</span><span class="t">systemd service, polls GitHub, executes jobs locally</span></div>
+      <div class="role"><span class="n">kubectl control point</span><span class="t">holds the K3s kubeconfig, talks to the cluster's API</span></div>
+    </div>
+  </div>
+
+  <p class="fanout-label">FROM HERE, AUTOMATION01 REACHES OUT TO EVERYTHING BELOW</p>
+
+  <div class="proxmox-box">
+    <span class="proxmox-label">Proxmox (hypervisor) — hosts every VM below</span>
+    <div class="managed-hosts">
+      <div class="card">
+        <span class="edge-label">SSH, ansible key — ongoing config</span>
+        <div class="card-name" style="font-size:1rem;">plex01</div>
+        <div class="card-sub"><code>192.168.1.50</code></div>
+        <ul><li>Plex, Portainer Agent</li><li>Managed via <code>deploy_plex.yml</code></li></ul>
+      </div>
+      <div class="card">
+        <span class="edge-label">SSH bootstrap + kubectl :6443 ongoing</span>
+        <div class="card-name" style="font-size:1rem;">k3s-master01</div>
+        <div class="card-sub"><code>192.168.1.60</code></div>
+        <ul><li>Single-node K3s cluster</li><li>Ansible only installed it once — kubectl runs it day to day</li></ul>
+      </div>
+      <div class="card dashed">
+        <span class="edge-label">NFS only — not managed</span>
+        <div class="card-name" style="font-size:1rem;">truenas01</div>
+        <div class="card-sub"><code>192.168.1.40</code></div>
+        <ul><li>ZFS storage, NFS/SMB exports</li><li>Driven by its own web UI, deliberately</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="github-row">
+    <div class="card" style="border-color: var(--text-dim);">
+      <div class="card-name" style="font-size:1rem;">GitHub</div>
+      <div class="card-sub">the same repo, from below this time</div>
+    </div>
+    <div class="github-arrow">
+      &rarr;
+      <span class="label">runner polls for jobs, pulls the repo, runs playbooks locally</span>
+    </div>
+    <div class="card" style="border-color: var(--hub);">
+      <div class="card-name" style="font-size:1rem; color: var(--hub);">automation01</div>
+      <div class="card-sub">closing the loop</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-line solid-hub"></span>automation01 — the bastion, control point for everything</div>
+    <div class="legend-item"><span class="legend-line"></span>Direct SSH / API connection</div>
+    <div class="legend-item"><span class="legend-line dashed"></span>Reachable, but deliberately not centrally managed</div>
+  </div>
+
+  <p class="closing">The pattern underneath all of this: <b>one machine holds the keys and the tools, everything else just gets reached out to.</b> The Windows workstation is the exception — Terraform is a native Windows binary, so it's the one tool that talks to Proxmox directly instead of routing through automation01.</p>
+
+  <footer>
+    Generated as part of <a href="https://github.com/Dup0n7/Homelab">Kyle's Homelab</a> — see <a href="https://github.com/Dup0n7/Homelab/blob/main/Docs/Kubernetes.md">Docs/Kubernetes.md</a>, <a href="https://github.com/Dup0n7/Homelab/blob/main/Docs/Ansible.md">Docs/Ansible.md</a>, and <a href="https://github.com/Dup0n7/Homelab/blob/main/Docs/Terraform.md">Docs/Terraform.md</a> for the reasoning behind each piece.
+  </footer>
+
+</div>
+</body>
+</html>
