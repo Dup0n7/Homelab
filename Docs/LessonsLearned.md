@@ -1,5 +1,16 @@
 # Lessons Learned
 
+## 2026-07-24
+
+### Public portfolio site: built as a separate repo, not folded into this one
+- Wanted a clean root URL (`kyledupont.github.io/`, no `/Homelab` in the path) rather than this repo's existing project-Pages URL — but GitHub Pages for a project repo always serves at `username.github.io/reponame/`, no way around that short of renaming this actual infra repo (bad idea) or buying a domain (not ready to). Fix: a separate repo literally named `kyledupont.github.io` — GitHub's special naming convention for a **user site**, which serves at the bare domain with zero path segments.
+- **Almost duplicated the system map into the new repo unnecessarily** before catching it — a project repo's Pages (`kyledupont.github.io/Homelab/`) and a user-site repo's Pages (`kyledupont.github.io/`) coexist completely independently on the same account; GitHub routes by which repo owns which Pages config, not by "whichever repo owns the root." The map stays exactly where it was, the portfolio just links out to it. See [Portfolio.md](Portfolio.md).
+
+### The "faint" text tier was actually failing accessibility contrast, not just a stylistic choice
+- The original site's dimmest text tier (used for dates, footer, nav pills, and some genuine body copy) looked like an intentional "quieter, secondary text" design choice — but measuring the real relative-luminance contrast ratio gave **3.29:1 in dark mode and 2.43:1 in light mode**, both under WCAG AA's 4.5:1 minimum for normal text. Light mode was worse than dark, which wasn't obvious just from eyeballing it in an editor.
+- **Lesson: a "this text should read as secondary/quiet" design intent still needs an actual contrast-ratio check**, not just "does this look okay to me right now" — faint/muted/secondary text tiers are exactly the ones most likely to drift under the AA line unnoticed, since they look intentional right up until someone says "this is hard to read."
+- Fixed by rebuilding the whole neutral scale (not just the one faint tier) to verified-passing values in both modes, then separately re-picking the accent colors (`hub`/`build`/`alt`) for taste via a 10-option side-by-side visual comparison — kept contrast-correctness and color-taste as two separate problems instead of conflating them.
+
 ## 2026-07-23
 
 ### Moving Postgres storage to truenas01 (NFS): two real gotchas

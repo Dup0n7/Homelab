@@ -6,7 +6,7 @@ This repository documents my self-hosted infrastructure for building, testing, a
 
 The lab is designed to mirror production environments as closely as possible while remaining cost effective for home use.
 
-See **[the system map](https://kyledupont.github.io/Homelab/)** for a live diagram of every host and how they connect, [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, [Docs/Security.md](Docs/Security.md) for the credential/secrets management plan, [Docs/Terraform.md](Docs/Terraform.md) for the IaC provisioning plan, [Docs/Ansible.md](Docs/Ansible.md) for the configuration-management plan, [Docs/Kubernetes.md](Docs/Kubernetes.md) for the K3s cluster, [Docs/Portfolio.md](Docs/Portfolio.md) for the public portfolio website plan, [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way, and [Docs/Commands.md](Docs/Commands.md) for a running cheat sheet of commonly used commands.
+See **[my portfolio](https://kyledupont.github.io/)** for the professional front door onto this work, **[the system map](https://kyledupont.github.io/Homelab/)** for a live diagram of every host and how they connect, [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, [Docs/Security.md](Docs/Security.md) for the credential/secrets management plan, [Docs/Terraform.md](Docs/Terraform.md) for the IaC provisioning plan, [Docs/Ansible.md](Docs/Ansible.md) for the configuration-management plan, [Docs/Kubernetes.md](Docs/Kubernetes.md) for the K3s cluster, [Docs/Portfolio.md](Docs/Portfolio.md) for the public portfolio website plan, [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way, and [Docs/Commands.md](Docs/Commands.md) for a running cheat sheet of commonly used commands.
 
 ---
 
@@ -142,6 +142,7 @@ Planned
 - GitHub Actions — self-hosted runner on automation01 auto-deploys Ansible playbooks on push to `main`, 2026-07-23, see [Docs/Ansible.md](Docs/Ansible.md)
 - Kubernetes (K3s) — single-node cluster on `k3s-master01`, provisioned via Terraform + bootstrapped via Ansible, 2026-07-24, see [Docs/Kubernetes.md](Docs/Kubernetes.md)
 - GitHub Pages — publishes the live [system map](https://kyledupont.github.io/Homelab/) (`Site/index.html`) automatically on every push that touches it, via `.github/workflows/deploy-pages.yml` on a GitHub-hosted runner (not automation01's — this job never touches the homelab network), 2026-07-24
+- GitHub Pages, portfolio — [kyledupont.github.io](https://kyledupont.github.io/) is a separate repo (a GitHub *user site*, so it serves at the bare domain with no `/Homelab` in the URL), plain HTML/CSS/JS with no build step — GitHub Pages serves the repo root directly, no Action needed, 2026-07-24. See [Docs/Portfolio.md](Docs/Portfolio.md).
 
 Planned
 
@@ -218,7 +219,7 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [ ] Homelable (network visual mapping/monitoring, nmap discovery + live health status — [github.com/Pouzor/homelable](https://github.com/Pouzor/homelable))
 - [ ] MCP Gateway (Docker MCP Gateway) — evaluated 2026-07-18, deferred past ~5 servers; now formally tracked here per user request 2026-07-23 — see [Docs/AI.md](Docs/AI.md)
 - [ ] Public-facing custom MCP server (internet-exposed, e.g. Zendesk ticketing) — idea captured 2026-07-23, depends on Reverse Proxy/SSL work above — see [Docs/AI.md](Docs/AI.md)
-- [ ] Public portfolio/career website — idea captured 2026-07-23, not started — see [Docs/Portfolio.md](Docs/Portfolio.md)
+- [x] Public portfolio website — built and live 2026-07-24 at [kyledupont.github.io](https://kyledupont.github.io/), a separate `kyledupont.github.io` repo, with a dark/light theme toggle shared with the system map — see [Docs/Portfolio.md](Docs/Portfolio.md)
 
 ---
 
@@ -232,7 +233,6 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - AI Automation
 - Backup Automation
 - Public-facing custom MCP server (internet-exposed) — see [Docs/AI.md](Docs/AI.md)
-- Public portfolio/career website — see [Docs/Portfolio.md](Docs/Portfolio.md)
 
 ---
 
