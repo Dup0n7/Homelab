@@ -117,4 +117,6 @@ Decision: not adopting yet. At 2 servers (`homelab-uptime-kuma`, `n8n-mcp`), the
 
 Revisit once the server count grows past ~5 (Proxmox/TrueNAS additions plus whatever comes after) or managing individual `.mcp.json` entries/auth becomes real toil — worth standing up and testing then, both to see if it simplifies management and as its own portfolio-relevant piece (aggregation/gateway patterns are common in IAM/platform tooling).
 
+**Auth layer, once the gateway is built**: Keycloak or Authentik (self-hosted OAuth2/OIDC provider — see README "Docker Services" Planned and "Future Projects") in front of the gateway, with tokens validated either by the gateway itself or a reverse proxy ahead of it. Idea captured 2026-07-24, not started — depends on the gateway decision above and the reverse proxy work already in README "Future Projects."
+
 **2026-07-23: formally added to the tracked roadmap** (README "Docker Services > Planned" and "Learning Progress > Planned") per user request — the "not adopting yet" timing decision above still stands, but it's now a real checklist item rather than a paragraph that could get lost.

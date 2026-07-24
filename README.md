@@ -100,6 +100,7 @@ See **[my portfolio](https://kyledupont.github.io/)** for the professional front
 - Open WebUI
 - Ollama
 - Homelable (network visual mapping — [github.com/Pouzor/homelable](https://github.com/Pouzor/homelable))
+- Keycloak or Authentik — self-hosted OAuth2/OIDC/SAML identity provider for hands-on SSO testing (Okta has no self-hosted option); planned eventual auth layer for the MCP Gateway, see [Docs/AI.md](Docs/AI.md). Idea captured 2026-07-24, not started.
 - Hermes Agent (self-hosted Discord IT-admin agent, via Ollama — see [Docs/AI.md](Docs/AI.md))
 - MCP Gateway (Docker MCP Gateway) — fronts `homelab-uptime-kuma` + `n8n-mcp` (and future MCP servers) behind one authenticated proxy, see [Docs/AI.md](Docs/AI.md)
 - Public-facing custom MCP server — internet-exposed, e.g. a Zendesk ticketing MCP, see [Docs/AI.md](Docs/AI.md)
@@ -229,7 +230,7 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - SSL Certificates
 - Internal DNS
 - Active Directory
-- SSO Integration
+- SSO Integration — Keycloak or Authentik (self-hosted, see [Docs/AI.md](Docs/AI.md))
 - AI Automation
 - Backup Automation
 - Public-facing custom MCP server (internet-exposed) — see [Docs/AI.md](Docs/AI.md)
