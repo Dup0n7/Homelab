@@ -26,6 +26,8 @@ Status: **Single-node K3s cluster built and verified 2026-07-24** — `k3s-maste
 
 **Side effect worth knowing about**: applying `k3s-master01.tf` ran `terraform apply` against the whole `Terraform/proxmox/` working directory, which also contains `plex01.tf` — staged and plan-reviewed weeks earlier but never actually applied. That import went through in the same run and triggered an unplanned ~15-minute reboot of `plex01` (self-healed automatically via `restart: unless-stopped`, no data loss, but real downtime). Full detail in [Terraform.md](Terraform.md)'s "Gotchas hit" — not repeating it here since it's a Terraform-behavior lesson, not a Kubernetes one, but flagging it since it happened in the same session.
 
+**Proxmox's dashboard can look alarming here — it isn't.** `k3s-master01` shows ~99% memory used in Proxmox's Summary tab. That's *not* real memory pressure — checked directly via `free -h` inside the VM: actual usage is ~1.1GB of 3.8GB, the rest is reclaimable disk cache (`buff/cache`), no swap in use, no OOM-kill events in `dmesg`. Root cause of the misleading dashboard number: `agent.enabled = false` (see above) means Proxmox can't see inside the guest to report real usage, so it's most likely showing the VM's static 4096MB allocation rather than actual load. **Trust `free -h` from inside the guest over Proxmox's summary graph for any VM without the guest agent.**
+
 ### The cluster: K3s, via Ansible
 
 [`Ansible/playbooks/install_k3s.yml`](../Ansible/playbooks/install_k3s.yml) — a **one-time bootstrap**, not ongoing config management. This is the deliberate split from [Terraform.md](Terraform.md)'s "Terraform provisions → Ansible configures → Kubernetes orchestrates": once the cluster exists, day-to-day workload changes go through `kubectl`/manifests, not Ansible. The playbook:
@@ -57,6 +59,12 @@ Server address: 10.42.0.9:80    Server name: hello-world-57cf9c5bdc-8xcvv
 
 Torn down immediately after verifying (`kubectl delete -f`) — it was a smoke test with no ongoing purpose, and minimizing idle RAM footprint was an explicit goal for this whole phase. The manifest stays in the repo; reapply it anytime with `kubectl apply -f Kubernetes/manifests/hello-world.yaml` to re-verify the cluster from scratch.
 
+## K3s does not use Docker
+
+Worth stating explicitly, since it's a very common assumption: **`k3s-master01` has no Docker installed at all** — confirmed directly (`docker: command not found`). K3s talks straight to `containerd` (visible in `kubectl get nodes -o wide`'s `CONTAINER-RUNTIME` column: `containerd://2.3.2-k3s2`), skipping Docker Engine entirely. This used to not be true — Kubernetes ran everything through Docker via a compatibility layer called `dockershim` until it was removed in Kubernetes 1.24 (2022). `containerd` isn't a competing project; it's the same low-level engine Docker Engine has been built on top of since 2017 — Kubernetes just talks to that piece directly instead of going through the rest of what Docker Engine bundles (the CLI, `docker build`, Compose).
+
+**Practical consequence for the "migrate a Docker Compose service" open question below**: Kubernetes manifests have **no equivalent to Compose's `build:` directive** — they can only reference an already-built image by name. Anything currently using `build:` (like `mcp-uptime-kuma`, compiled fresh on `automation01` on every deploy) would need an explicit build-and-push step to a registry *before* a K8s manifest could reference it — `k3s-master01` has no Docker to build with locally the way `automation01` does. Services already using a plain `image:` (Postgres, Plex) don't have this problem — the same image reference just moves into a Deployment's `image:` field unchanged.
+
 ## Running it
 
 From `automation01`:
@@ -77,7 +85,7 @@ ansible-playbook -i inventory.ini playbooks/install_k3s.yml
 
 ## Open questions / next steps
 
-- [ ] Migrate a real Docker Compose service onto the cluster (per the original roadmap's phrasing, "migrate Docker Compose services over") — this is the actual valuable exercise, not just standing up an empty cluster. Candidate: something low-stakes first, not Postgres/Plex.
+- [ ] Migrate a real Docker Compose service onto the cluster (per the original roadmap's phrasing, "migrate Docker Compose services over") — this is the actual valuable exercise, not just standing up an empty cluster. Candidate: something low-stakes first, not Postgres/Plex. A service already using plain `image:` (not `build:`) is the easier first target — see "K3s does not use Docker" above for why `build:`-based services need an extra step first.
 - [ ] Exercise Traefik (K3s's bundled default Ingress controller, already installed and running in `kube-system` — confirmed during setup) instead of `NodePort` — real hostname-based routing rather than a raw port.
 - [ ] Persistent storage: no `StorageClass` beyond K3s's default `local-path` provisioner has been exercised yet. Would need an NFS-backed option (matching the `tank/postgres`/`tank/media` pattern) for anything stateful.
 - [ ] Add `k3s-worker01` if/when RAM headroom allows — the naming convention and join mechanism are already known, just not needed yet at this scale.

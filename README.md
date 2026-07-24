@@ -141,6 +141,7 @@ Planned
 - Ansible — first playbook applied 2026-07-23 (PostgreSQL, `automation01`); widened same day to a second host, `plex01`, over a dedicated SSH keypair — see [Docs/Ansible.md](Docs/Ansible.md)
 - GitHub Actions — self-hosted runner on automation01 auto-deploys Ansible playbooks on push to `main`, 2026-07-23, see [Docs/Ansible.md](Docs/Ansible.md)
 - Kubernetes (K3s) — single-node cluster on `k3s-master01`, provisioned via Terraform + bootstrapped via Ansible, 2026-07-24, see [Docs/Kubernetes.md](Docs/Kubernetes.md)
+- GitHub Pages — publishes the live [system map](https://dup0n7.github.io/Homelab/) (`Site/index.html`) automatically on every push that touches it, via `.github/workflows/deploy-pages.yml` on a GitHub-hosted runner (not automation01's — this job never touches the homelab network), 2026-07-24
 
 Planned
 
@@ -205,6 +206,7 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 - [x] Ansible widened to a second, SSH-managed host — `plex01` added to inventory via a dedicated `automation01`-generated keypair, `deploy_plex.yml` applied and confirmed idempotent (unchanged container uptime), 2026-07-23 — see [Docs/Ansible.md](Docs/Ansible.md).
 - [x] GitHub Actions — self-hosted runner on `automation01` (systemd service), auto-runs Ansible playbooks on push to `main`; push-trigger-only to stay safe on a public repo — see [Docs/Ansible.md](Docs/Ansible.md).
 - [x] Kubernetes — single-node K3s cluster, `k3s-master01` provisioned via Terraform (2 vCPU/4GB RAM, chosen deliberately minimal given the lab's 32GB total budget) and bootstrapped via Ansible; kubectl access lives on `automation01`, same bastion-host pattern as Ansible/GitHub Actions. First real workload deployed, load-balancing verified over actual HTTP requests, then torn down (smoke test only) — 2026-07-24, see [Docs/Kubernetes.md](Docs/Kubernetes.md).
+- [x] GitHub Pages — live [system map](https://dup0n7.github.io/Homelab/) of the whole lab's topology, deployed automatically via GitHub Actions on a GitHub-hosted runner — 2026-07-24.
 - [ ] Windows Server (dc01) / AD
 - [ ] AI Stack (Ollama / Open WebUI via RTX 4000)
 - [ ] n8n workflows calling AI (Claude / local LLMs)
@@ -267,6 +269,7 @@ homelab/
 - Windows Server
 - PowerShell
 - GitHub Actions
+- GitHub Pages
 - Python
 - Bash
 - Claude / Claude Agent SDK
