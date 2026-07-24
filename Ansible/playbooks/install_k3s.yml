@@ -1,0 +1,53 @@
+---
+# Bootstraps the single-node K3s cluster (k3s-master01) and pulls a working
+# kubeconfig back onto automation01, which becomes the kubectl "bastion"
+# for this cluster the same way it already is for Ansible and GitHub
+# Actions. See Docs/Kubernetes.md for why K3s and why single-node.
+#
+# This is a one-time bootstrap, not an ongoing config-management job - once
+# the cluster exists, day-to-day workload changes go through kubectl/K8s
+# manifests, not this playbook. Matches the "Terraform provisions -> Ansible
+# configures -> Kubernetes orchestrates" split from Docs/Terraform.md.
+- name: Install K3s on k3s-master01
+  hosts: k3s-master01
+  become: true
+
+  tasks:
+    - name: Install K3s (official script - idempotent via the creates guard)
+      ansible.builtin.shell: curl -sfL https://get.k3s.io | sh -
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Wait for the node to report Ready
+      ansible.builtin.command: k3s kubectl get nodes --no-headers
+      register: node_status
+      until: "'Ready' in node_status.stdout"
+      retries: 20
+      delay: 5
+      changed_when: false
+
+    - name: Fetch kubeconfig back to automation01 (the Ansible/kubectl control node)
+      ansible.builtin.fetch:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: /home/kyle/.kube/config
+        flat: true
+        mode: "0600"
+
+    - name: Point the fetched kubeconfig at k3s-master01's real IP, not 127.0.0.1
+      ansible.builtin.replace:
+        path: /home/kyle/.kube/config
+        regexp: "https://127.0.0.1:6443"
+        replace: "https://{{ ansible_host }}:6443"
+      delegate_to: localhost
+
+    - name: Confirm kubectl is installed on automation01
+      ansible.builtin.shell: |
+        set -o pipefail
+        curl -sLO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        rm -f kubectl
+      args:
+        creates: /usr/local/bin/kubectl
+        executable: /bin/bash
+      delegate_to: localhost
+      become: true

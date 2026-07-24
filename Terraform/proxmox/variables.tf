@@ -45,3 +45,9 @@ variable "vm_gateway" {
   type        = string
   default     = "192.168.1.254"
 }
+
+variable "ansible_public_key" {
+  description = "Public half of automation01's dedicated ansible_ed25519 keypair (see Docs/Ansible.md 'Cross-host management') - baked into new VMs at creation via cloud-init so Ansible can reach them over SSH without a manual authorized_keys retrofit like plex01 needed. Public key, safe to commit - not sensitive."
+  type        = string
+  default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFl0y1EUIgQAtKvU6MOtteBDD0USlLarKa24WmeiaGI8 automation01-ansible-control"
+}

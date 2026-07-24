@@ -6,7 +6,7 @@ This repository documents my self-hosted infrastructure for building, testing, a
 
 The lab is designed to mirror production environments as closely as possible while remaining cost effective for home use.
 
-See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, [Docs/Security.md](Docs/Security.md) for the credential/secrets management plan, [Docs/Terraform.md](Docs/Terraform.md) for the IaC provisioning plan, [Docs/Portfolio.md](Docs/Portfolio.md) for the public portfolio website plan, [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way, and [Docs/Commands.md](Docs/Commands.md) for a running cheat sheet of commonly used commands.
+See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Network.md](Docs/Network.md) and [Docs/Storage.md](Docs/Storage.md) for infrastructure detail, [Docs/AI.md](Docs/AI.md) for the AI/MCP/agents roadmap, [Docs/Security.md](Docs/Security.md) for the credential/secrets management plan, [Docs/Terraform.md](Docs/Terraform.md) for the IaC provisioning plan, [Docs/Ansible.md](Docs/Ansible.md) for the configuration-management plan, [Docs/Kubernetes.md](Docs/Kubernetes.md) for the K3s cluster, [Docs/Portfolio.md](Docs/Portfolio.md) for the public portfolio website plan, [Docs/LessonsLearned.md](Docs/LessonsLearned.md) for what's been learned along the way, and [Docs/Commands.md](Docs/Commands.md) for a running cheat sheet of commonly used commands.
 
 ---
 
@@ -69,8 +69,8 @@ See [Docs/Architecture.md](Docs/Architecture.md) for the current build, [Docs/Ne
 | plex01 | Docker — Plex, Portainer Agent | ✅ Running |
 | dc01 | Windows Server (AD/DNS/GPO) | Planned |
 | win11-test01 | Test workstation | Planned |
-| k3s-master01 | Kubernetes | Planned |
-| k3s-worker01 | Kubernetes | Planned |
+| k3s-master01 | Kubernetes — single-node K3s (control-plane + worker), see [Docs/Kubernetes.md](Docs/Kubernetes.md) | ✅ Running |
+| k3s-worker01 | Kubernetes | Planned — add if RAM headroom allows |
 
 ---
 
@@ -137,9 +137,10 @@ Planned
 
 # Automation
 
-- Terraform — automation01 imported and under Terraform management 2026-07-22, see [Docs/Terraform.md](Docs/Terraform.md)
+- Terraform — automation01 imported and under Terraform management 2026-07-22; plex01 imported and k3s-master01 created 2026-07-24, see [Docs/Terraform.md](Docs/Terraform.md)
 - Ansible — first playbook applied 2026-07-23 (PostgreSQL, `automation01`); widened same day to a second host, `plex01`, over a dedicated SSH keypair — see [Docs/Ansible.md](Docs/Ansible.md)
 - GitHub Actions — self-hosted runner on automation01 auto-deploys Ansible playbooks on push to `main`, 2026-07-23, see [Docs/Ansible.md](Docs/Ansible.md)
+- Kubernetes (K3s) — single-node cluster on `k3s-master01`, provisioned via Terraform + bootstrapped via Ansible, 2026-07-24, see [Docs/Kubernetes.md](Docs/Kubernetes.md)
 
 Planned
 
@@ -158,6 +159,7 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 | truenas01 | 192.168.1.40 |
 | plex01 | 192.168.1.50 |
 | dc01 | Reserved: 192.168.1.30 |
+| k3s-master01 | 192.168.1.60 |
 
 ---
 
@@ -197,12 +199,12 @@ Static IPs (see [Docs/Network.md](Docs/Network.md) for full detail)
 ## Planned
 
 - [ ] Grafana / Prometheus / Loki monitoring stack
-- [x] Terraform — provider (`bpg/proxmox`); full lifecycle proven on a disposable test VM (`tf-test01`: applied, SSH-verified, destroyed cleanly); then **`automation01` imported into Terraform state 2026-07-22** — see [Docs/Terraform.md](Docs/Terraform.md) for the full permission/import gotchas and what "Terraform-managed" now means for that VM. `plex01` is planned (`plex01.tf` written, clean `plan` reviewed) but not yet applied.
+- [x] Terraform — provider (`bpg/proxmox`); full lifecycle proven on a disposable test VM (`tf-test01`: applied, SSH-verified, destroyed cleanly); then **`automation01` imported into Terraform state 2026-07-22** — see [Docs/Terraform.md](Docs/Terraform.md) for the full permission/import gotchas and what "Terraform-managed" now means for that VM. **`plex01` imported and applied 2026-07-24** (triggered an unplanned ~15-minute reboot — see Docs/Terraform.md "Gotchas hit").
 - [x] Ansible — runs from `automation01` (control node can't be Windows natively — see [Docs/Ansible.md](Docs/Ansible.md)); first playbook applied 2026-07-23, secrets handled via Ansible Vault, not a plaintext `.env`.
 - [x] PostgreSQL — deployed via that first Ansible playbook 2026-07-23 (v17, `automation01`), connected to and queried for real (not just a healthy-looking container) — see [Docs/Ansible.md](Docs/Ansible.md).
 - [x] Ansible widened to a second, SSH-managed host — `plex01` added to inventory via a dedicated `automation01`-generated keypair, `deploy_plex.yml` applied and confirmed idempotent (unchanged container uptime), 2026-07-23 — see [Docs/Ansible.md](Docs/Ansible.md).
 - [x] GitHub Actions — self-hosted runner on `automation01` (systemd service), auto-runs Ansible playbooks on push to `main`; push-trigger-only to stay safe on a public repo — see [Docs/Ansible.md](Docs/Ansible.md).
-- [ ] Kubernetes
+- [x] Kubernetes — single-node K3s cluster, `k3s-master01` provisioned via Terraform (2 vCPU/4GB RAM, chosen deliberately minimal given the lab's 32GB total budget) and bootstrapped via Ansible; kubectl access lives on `automation01`, same bastion-host pattern as Ansible/GitHub Actions. First real workload deployed, load-balancing verified over actual HTTP requests, then torn down (smoke test only) — 2026-07-24, see [Docs/Kubernetes.md](Docs/Kubernetes.md).
 - [ ] Windows Server (dc01) / AD
 - [ ] AI Stack (Ollama / Open WebUI via RTX 4000)
 - [ ] n8n workflows calling AI (Claude / local LLMs)
