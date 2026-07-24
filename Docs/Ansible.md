@@ -113,7 +113,7 @@ The runner agent itself is **not part of this git repo** — `deploy-ansible.yml
 Registered as a systemd service, `actions.runner.Dup0n7-Homelab.automation01.service` (`/etc/systemd/system/`), running as `kyle`, `enabled` + `active`.
 
 **Watching it run:**
-- GitHub's Actions tab (`github.com/Dup0n7/Homelab/actions`) — the normal way, shows every run and step-by-step logs.
+- GitHub's Actions tab (`github.com/kyledupont/Homelab/actions`) — the normal way, shows every run and step-by-step logs.
 - Runner online/idle/active status: repo **Settings → Actions → Runners**.
 - On `automation01`: `sudo journalctl -u actions.runner.Dup0n7-Homelab.automation01.service -f` (live) or `--no-pager -n 100` (history).
 
